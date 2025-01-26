@@ -54,14 +54,14 @@ pub fn init_sdl2(
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
   }
 
-  let mut b = sdl2::hint::set_with_priority(
+  let mut _b = sdl2::hint::set_with_priority(
     "SDL_HINT_WINDOWS_DPI_AWARENESS ",
     "permonitorv2",
     &sdl2::hint::Hint::Override,
   );
 
   // I'm handling DPI scaling by myself ... For now !
-  b = sdl2::hint::set_with_priority(
+  _b = sdl2::hint::set_with_priority(
     "SDL_HINT_WINDOWS_DPI_SCALING",
     "0",
     &sdl2::hint::Hint::Override,
@@ -121,7 +121,7 @@ pub fn init_sdl2(
     })
     .unwrap_or_else(|e| {
       errors::prompt_err_and_panic("SDL initialization error", &e, None);
-    });>
+    });
 
   (sdl_context, image_context, ttf_context, video_subsystem, mixer_subsystem, canvas)
   // no need to return the window, it is held by the canvas
