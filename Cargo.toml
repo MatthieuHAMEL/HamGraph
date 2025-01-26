@@ -1,0 +1,20 @@
+[package]
+name = "hamgraph"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde_json = "1.0"
+dirs = "5.0"
+bitflags = "2"
+taffy = "0.7.1"
+winapi = { version = "0.3", features = ["winuser"] }
+
+[dependencies.sdl2]
+version = "0.37"
+default-features = false
+features = ["image", "mixer", "ttf"]
+
+[dependencies.serde]
+version = "1.0.210"
+features = ["derive"]
