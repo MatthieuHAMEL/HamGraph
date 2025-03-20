@@ -1,8 +1,10 @@
-use std::{rc::Rc, time::{Duration, Instant}};
+use std::time::{Duration, Instant};
 
 use sdl2::{event::{Event, WindowEvent}, image::Sdl2ImageContext, keyboard::Keycode, mixer::Sdl2MixerContext, mouse::MouseButton, pixels::Color, render::{Canvas, TextureCreator}, ttf::Sdl2TtfContext, video::{Window, WindowContext}, Sdl, VideoSubsystem};
 //use taffy::print_tree;
 use crate::{action::Action, action_bus::{ActionBus, ActionPriv}, font::FontStore, infraglobals, init, layout_manager::LayoutManager, mixer_manager::MixerManager, scene::{Scene, SceneID, SceneStack}, sprite::SpriteStore};
+
+pub use crate::infraglobals::set_game_path;
 
 #[derive(Debug, Clone)]
 pub enum HamID {
@@ -10,31 +12,32 @@ pub enum HamID {
   SpriteID(usize)
 }
 
+/** "Abstraction" of SDL2 for the user. */
 pub struct HamSdl2 {
-  pub sdl_context: Sdl,
-  pub image_context: Sdl2ImageContext,
-  pub ttf_context: Sdl2TtfContext,
-  pub video_subsystem: VideoSubsystem,
-  pub mixer_context: Sdl2MixerContext,
-  pub canvas: Canvas<Window>,
-  pub texture_creator: TextureCreator<WindowContext>,
-  pub window_dim: (u32, u32),
+  sdl_context: Sdl,
+  _image_context: Sdl2ImageContext,
+  ttf_context: Sdl2TtfContext,
+  _video_subsystem: VideoSubsystem,
+  _mixer_context: Sdl2MixerContext,
+  canvas: Canvas<Window>,
+  texture_creator: TextureCreator<WindowContext>,
+  window_dim: (u32, u32),
 }
 
 impl HamSdl2 {
-  pub fn new(win_width: u32, win_heigt: u32) -> Self {
-    let (sdl_context, image_context, ttf_context, video_subsystem, mixer_context, canvas) 
-    = init::init_sdl2("WHIP", win_width, win_heigt);
+  pub fn new(title: &str, win_width: u32, win_heigt: u32) -> Self {
+    let (sdl_context, _image_context, ttf_context, _video_subsystem, _mixer_context, canvas) 
+    = init::init_sdl2(title, win_width, win_heigt);
 
     let texture_creator = canvas.texture_creator();
-
     Self {
-      sdl_context, image_context, ttf_context, video_subsystem, mixer_context, canvas, 
+      sdl_context, _image_context, ttf_context, _video_subsystem, _mixer_context, canvas, 
       window_dim: (win_width, win_heigt), texture_creator
     }
   }
 }
 
+// For now (TODO) everything is pub -- I'll see later...
 pub struct HamGraph<'a> {
   pub sprite_store: SpriteStore<'a>,
   pub sdl_context: &'a Sdl,
@@ -43,14 +46,13 @@ pub struct HamGraph<'a> {
   pub action_bus: ActionBus, // TODO not pub !
   pub font_store: FontStore<'a>,
   pub(crate) layout_manager: LayoutManager,
- // pub window_dim: (u32, u32),
+  pub window_dim: (u32, u32),
   pub mixer_manager: MixerManager<'a>,
 }
   
-impl<'a> HamGraph<'a> {
-  pub fn new(hamsdl2: &'a mut HamSdl2, 
-    mut root_scene: Box<dyn Scene>) -> Self 
-  {
+impl<'a> HamGraph<'a> 
+{
+  pub fn new(hamsdl2: &'a mut HamSdl2, mut root_scene: Box<dyn Scene>) -> Self {
     let sprite_store = SpriteStore::new(&mut hamsdl2.texture_creator);
 
     let mut action_bus = ActionBus::new(sprite_store.shared_len());
@@ -75,7 +77,7 @@ impl<'a> HamGraph<'a> {
       action_bus, 
       font_store, 
       layout_manager, 
-      //window_dim, 
+      window_dim: hamsdl2.window_dim.clone(), 
       mixer_manager: MixerManager::new()
     }
   }
@@ -88,9 +90,8 @@ impl<'a> HamGraph<'a> {
       real_parent = parent;
     }
     println!("Registering id=<{}>, parent=<{}>", id, real_parent);
-    let id2 = self.scene_stack.push(layer, scene, id, real_parent);
-      // assert id == id2 todo 
-    if id != id2 {
+    let id2 = self.scene_stack.push(layer, scene, id, real_parent); 
+    if id != id2 { // use some assert
       panic!("IDs inconsistency");
     }
     self.action_bus.prepare(id);

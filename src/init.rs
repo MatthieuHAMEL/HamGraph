@@ -1,5 +1,3 @@
-pub use crate::infraglobals::set_game_path;
-
 use std::panic;
 
 use sdl2::image;
