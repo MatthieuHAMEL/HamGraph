@@ -1,8 +1,8 @@
-use std::time::{Duration, Instant};
+use std::{rc::Rc, time::{Duration, Instant}};
 
-use sdl2::{event::{Event, WindowEvent}, keyboard::Keycode, mouse::MouseButton, pixels::Color, render::{Canvas, TextureCreator}, ttf::Sdl2TtfContext, video::{Window, WindowContext}, Sdl};
+use sdl2::{event::{Event, WindowEvent}, image::Sdl2ImageContext, keyboard::Keycode, mixer::Sdl2MixerContext, mouse::MouseButton, pixels::Color, render::{Canvas, TextureCreator}, ttf::Sdl2TtfContext, video::{Window, WindowContext}, Sdl, VideoSubsystem};
 //use taffy::print_tree;
-use crate::{action::Action, action_bus::{ActionBus, ActionPriv}, font::FontStore, infraglobals, layout_manager::LayoutManager, mixer_manager::MixerManager, scene::{Scene, SceneID, SceneStack}, sprite::SpriteStore};
+use crate::{action::Action, action_bus::{ActionBus, ActionPriv}, font::FontStore, infraglobals, init, layout_manager::LayoutManager, mixer_manager::MixerManager, scene::{Scene, SceneID, SceneStack}, sprite::SpriteStore};
 
 #[derive(Debug, Clone)]
 pub enum HamID {
@@ -10,52 +10,73 @@ pub enum HamID {
   SpriteID(usize)
 }
 
-pub struct HamGraph<'a> {
+pub struct HamSdl2 {
   pub sdl_context: Sdl,
+  pub image_context: Sdl2ImageContext,
+  pub ttf_context: Sdl2TtfContext,
+  pub video_subsystem: VideoSubsystem,
+  pub mixer_context: Sdl2MixerContext,
   pub canvas: Canvas<Window>,
-  pub sprite_store: SpriteStore<'a>,
-  pub font_store: FontStore<'a>,
-  pub scene_stack: SceneStack,
-  pub(crate) layout_manager: LayoutManager,
+  pub texture_creator: TextureCreator<WindowContext>,
   pub window_dim: (u32, u32),
+}
+
+impl HamSdl2 {
+  pub fn new(win_width: u32, win_heigt: u32) -> Self {
+    let (sdl_context, image_context, ttf_context, video_subsystem, mixer_context, canvas) 
+    = init::init_sdl2("WHIP", win_width, win_heigt);
+
+    let texture_creator = canvas.texture_creator();
+
+    Self {
+      sdl_context, image_context, ttf_context, video_subsystem, mixer_context, canvas, 
+      window_dim: (win_width, win_heigt), texture_creator
+    }
+  }
+}
+
+pub struct HamGraph<'a> {
+  pub sprite_store: SpriteStore<'a>,
+  pub sdl_context: &'a Sdl,
+  pub canvas: &'a mut Canvas<Window>,
+  pub scene_stack: SceneStack,
   pub action_bus: ActionBus, // TODO not pub !
+  pub font_store: FontStore<'a>,
+  pub(crate) layout_manager: LayoutManager,
+ // pub window_dim: (u32, u32),
   pub mixer_manager: MixerManager<'a>,
-  pub ttf_context: &'a Sdl2TtfContext,
 }
   
 impl<'a> HamGraph<'a> {
-  pub fn new(
-    sdl_context: Sdl,
-    texture_creator: &'a mut TextureCreator<WindowContext>, 
-    canvas: Canvas<Window>,
-    ttf_ctx: &'a Sdl2TtfContext,
-      mut root_scene: Box<dyn Scene>) -> Self 
+  pub fn new(hamsdl2: &'a mut HamSdl2, 
+    mut root_scene: Box<dyn Scene>) -> Self 
   {
-    let sprite_store = SpriteStore::new(texture_creator);
+    let sprite_store = SpriteStore::new(&mut hamsdl2.texture_creator);
 
     let mut action_bus = ActionBus::new(sprite_store.shared_len());
     root_scene.init(&mut action_bus);
 
-    let wdim = canvas.window().size();
+    let wdim = hamsdl2.canvas.window().size();
     println!("Window dimensions: {:?}", wdim);
     let layout_manager = LayoutManager::new(wdim);
 
     let mut font_store = FontStore::new();
+    let scene_stack = SceneStack::new(root_scene, layout_manager.root_node_id);
     // To do, this should of course be multiplied by the UI scale. 
-    font_store.load_from_folder(ttf_ctx,  &infraglobals::get_ttf_path(), 12u16, "small");
-    font_store.load_from_folder(ttf_ctx,  &infraglobals::get_ttf_path(), 20u16, "medium");
-    font_store.load_from_folder(ttf_ctx,  &infraglobals::get_ttf_path(), 30u16, "big");
-    Self { 
-      sdl_context,
-      canvas,
-      sprite_store, 
-      font_store,
-      scene_stack: SceneStack::new(root_scene, layout_manager.root_node_id), 
-      layout_manager,
-      window_dim: wdim,
+    font_store.load_from_folder(&hamsdl2.ttf_context,  &infraglobals::get_ttf_path(), 12u16, "small");
+    font_store.load_from_folder(&hamsdl2.ttf_context,  &infraglobals::get_ttf_path(), 20u16, "medium");
+    font_store.load_from_folder(&hamsdl2.ttf_context,  &infraglobals::get_ttf_path(), 30u16, "big");
+ 
+    Self {
+      sprite_store,
+      canvas: &mut hamsdl2.canvas,
+      sdl_context: &hamsdl2.sdl_context,
+      scene_stack, 
       action_bus, 
-      mixer_manager: MixerManager::new(), 
-      ttf_context: &ttf_ctx, 
+      font_store, 
+      layout_manager, 
+      //window_dim, 
+      mixer_manager: MixerManager::new()
     }
   }
 
@@ -194,12 +215,9 @@ impl<'a> HamGraph<'a> {
         self.scene_stack.update_layout(&self.layout_manager);
       }
 
-
       // 4. DRAW
       self.canvas.set_draw_color(Color::RGB(0, 0, 0));
       self.canvas.clear();
-
-        // TODO!!!
       
       self.scene_stack.render_all(&mut self.canvas, &mut self.sprite_store);
 

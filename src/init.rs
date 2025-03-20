@@ -110,7 +110,7 @@ pub fn init_sdl2(
   let canvas: Canvas<Window> = window
     .into_canvas()
     // .present_vsync()
-    .build() // vsync : (TODO : what if no VSYNC support?) : no framerate nor delay needed in mainloop ...
+    .build() // vsync : (TODO : VSYNC support vs no vsync support)
     .map_err(|e| match e {
       IntegerOrSdlError::IntegerOverflows(msg, val) => {
         format!("int overflow {}, val: {}", msg, val)
