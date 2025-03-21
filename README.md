@@ -1,1 +1,3 @@
 This is my attempt to create a simple 2D game engine with Rust and the SDL2 crate.
+
+See also the HamGraph_Macros repo ...

@@ -6,8 +6,10 @@ use crate::scene::SceneID;
 use bitflags::bitflags;
 
 // TODO: do better : avoid all this boilerplate !!!
-// Have some int represent directly the real enum variants !
+// I'm not satisfied with this module 
+// Have some int represent DIRECTLY the real enum variants ?
 // A lightweight enum that only represents the *kind* of an action
+// ... avoid that big match {} below ... 
 
 bitflags! {
   /// Flags representing the different *kinds* of actions.

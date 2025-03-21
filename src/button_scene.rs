@@ -6,7 +6,7 @@ pub struct ButtonScene {
   pos: Option<Rect>,
   lil_name: String,
   pressed: bool, 
-  color_tmp: Color,
+  color_tmp: Color, // temporary because there will be a better style system obviously
   layout: Layout
 }
 
@@ -24,7 +24,7 @@ impl Scene for ButtonScene {
     bus.push(Action::CreateScene { scene: Box::new(TextScene::new(self.lil_name.clone(), "big".to_owned())), layer: 4 /*URGENT TODO  */ });
   }
 
-  fn render(&self, renderer: &mut sdl2::render::Canvas<Window>, sprites: &mut SpriteStore) -> Result<(), String> {
+  fn render(&self, renderer: &mut sdl2::render::Canvas<Window>, _sprites: &mut SpriteStore) -> Result<(), String> {
     if self.pos == None { return Ok(()) }
     if self.pressed {
       renderer.set_draw_color(Color::RGB(0, 100, 255));
@@ -34,10 +34,6 @@ impl Scene for ButtonScene {
     }
     renderer.fill_rect(self.pos).map_err(|e| e.to_string())?; 
     Ok(())
-  }
-
-  fn is_modal(&self) -> bool {
-    false
   }
 
   fn left_click_zone(&self) -> Option<Rect> {
