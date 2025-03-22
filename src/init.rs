@@ -1,5 +1,4 @@
 use std::panic;
-
 use sdl2::image;
 use sdl2::image::Sdl2ImageContext;
 use sdl2::mixer::{Sdl2MixerContext, AUDIO_S16LSB, DEFAULT_CHANNELS};

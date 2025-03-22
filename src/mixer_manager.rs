@@ -13,6 +13,7 @@ pub struct MixerManager<'a> {
 
 impl MixerManager<'_>
 {
+  // (TODO?) clippy "you should consider adding a `Default` implementation for `MixerManager<'_>`"
   pub fn new() -> Self {
     Self {
       music_store: HashMap::new(),

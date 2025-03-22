@@ -16,7 +16,7 @@ impl<'a> TextureMap<'a>
 {
   pub fn new(texture_creator: &'a mut TextureCreator<WindowContext>) -> TextureMap<'a>
   {
-    TextureMap { textures: Vec::new(), filenames: Vec::new(), texture_creator: texture_creator }
+    TextureMap { textures: Vec::new(), filenames: Vec::new(), texture_creator }
   }
 
   pub fn get_texture(&mut self, texture_id: usize) -> &Texture
@@ -56,8 +56,8 @@ impl<'a> TextureMap<'a>
   // Ensures the size of filenames remains the same than textures.
   pub fn push_new_texture(&mut self, path: String, opt_surface: Option<Surface>) -> usize {
     if let Some(surface) = opt_surface {
-      if path != "" {
-        panic!("Direct texture creation from surface only supported for TTF");
+      if !path.is_empty() {
+        panic!("Direct texture creation from surface is only supported for TTF");
       }
       let texture = self.texture_creator
         .create_texture_from_surface(&surface).unwrap();

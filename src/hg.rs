@@ -77,7 +77,7 @@ impl<'a> HamGraph<'a>
       action_bus, 
       font_store, 
       layout_manager, 
-      window_dim: hamsdl2.window_dim.clone(), 
+      window_dim: hamsdl2.window_dim, 
       mixer_manager: MixerManager::new()
     }
   }
@@ -86,7 +86,7 @@ impl<'a> HamGraph<'a>
   fn register_scene(&mut self, layer: usize, scene: Box<dyn Scene>, id: SceneID, parent: SceneID) {
     let mut real_parent: SceneID = 0;
     // If parent is already dead, just parent the scene to 0
-    if let Some(_) = self.scene_stack.from_id(parent) {
+    if self.scene_stack.get_scene(parent).is_some() {
       real_parent = parent;
     }
     println!("Registering id=<{}>, parent=<{}>", id, real_parent);
@@ -220,7 +220,7 @@ impl<'a> HamGraph<'a>
       self.canvas.set_draw_color(Color::RGB(0, 0, 0));
       self.canvas.clear();
       
-      self.scene_stack.render_all(&mut self.canvas, &mut self.sprite_store);
+      self.scene_stack.render_all(self.canvas, &mut self.sprite_store);
 
       // 5. UPDATE SCREEN
       self.canvas.present();

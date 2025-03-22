@@ -37,7 +37,7 @@ impl Scene for TextScene {
   }
 
   fn render(&self, renderer: &mut Canvas<Window>, sprites: &mut SpriteStore) -> Result<(), String> {
-    sprites.render(renderer, self.idx_text as usize, self.pos.x, self.pos.y, None);
+    sprites.render(renderer, self.idx_text, self.pos.x, self.pos.y, None);
     Ok(())
   }
 

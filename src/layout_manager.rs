@@ -167,7 +167,7 @@ impl LayoutManager {
       layout.size.height as u32);
     
     let mut par = self.taffy_tree.parent(node);
-    while par != None {
+    while par.is_some() {
       res.x += self.taffy_tree.layout(par.unwrap()).unwrap().location.x as i32;
       res.y += self.taffy_tree.layout(par.unwrap()).unwrap().location.y as i32;
 

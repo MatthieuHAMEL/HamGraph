@@ -1,4 +1,4 @@
-use std::{collections::HashSet, u64};
+use std::collections::HashSet;
 use sdl2::{event::Event, rect::Rect, video::Window};
 use taffy::NodeId;
 use crate::{action::{Action, ActionKind}, action_bus::{ActionBus, ActionPriv}, layout_manager::LayoutManager, sprite::SpriteStore, utils::is_point_in_rect};
@@ -76,7 +76,7 @@ impl SceneStack
     // Add children 
      // If detached mode, pass 0 anyway, so, .. ok 
     println!("Pushing scene id=<{}>, parent=<{}>", id, parent);
-    if let Some(parent_scene) = self.from_id(parent) {
+    if let Some(parent_scene) = self.get_scene(parent) {
       parent_scene.children.push(id); // If parent scene is dead we are bad 
     }
     id
@@ -101,7 +101,8 @@ impl SceneStack
 
     // Not even the parent scene was found
     if !found {
-      return; // Maybe on some debug mode, raise something ... 
+      // Maybe on some debug mode, raise something ... (assert)
+      println!("Scene not found in remove_scene.") ; // but is it even bad ? ..
       // hey your scene doesnt exist man
     }
   }
@@ -125,7 +126,7 @@ impl SceneStack
   }
 
   pub fn init(&mut self, id: SceneID, action_bus: &mut ActionBus) {
-    self.from_id(id).unwrap().scene.init(action_bus);
+    self.get_scene(id).unwrap().scene.init(action_bus);
   }
 
   pub fn update_all(&mut self, delta_time: f32, action_bus: &mut ActionBus) {
@@ -169,7 +170,7 @@ impl SceneStack
         // Since a scene with no clickable zone shouldn't subscribe to click events!...
         if let Action::SdlEvent (Event::MouseButtonDown{x, y, ..}) = action {
           let clickable = scene_priv.scene.left_click_zone()
-          .map_or(false, |rect| is_point_in_rect(&rect, x, y));
+          .is_some_and(|rect| is_point_in_rect(&rect, x, y));
 
           if !clickable && scene_priv.scene.is_modal() { // x, y not in clickable zone
             return; // If x, y not in current scene and scene is modal, just return.
@@ -218,7 +219,7 @@ impl SceneStack
     }
   }
 
-  pub(crate) fn from_id(&mut self, id: SceneID) -> Option<&mut ScenePriv> {
+  pub(crate) fn get_scene(&mut self, id: SceneID) -> Option<&mut ScenePriv> {
     for layer_vec in &mut self.scenes_priv 
     {
       if let Some(pos) = layer_vec.iter().position(|sc_p| sc_p.id == id) {
@@ -229,7 +230,7 @@ impl SceneStack
   }
    // todo optimise with indexes 
   pub(crate) fn nodeid(&mut self, id: SceneID) -> Option<NodeId> {
-    if let Some(scene_p) = self.from_id(id) {
+    if let Some(scene_p) = self.get_scene(id) {
       scene_p.taffy_id
     }
     else {
@@ -239,11 +240,11 @@ impl SceneStack
   }
 
   pub(crate) fn set_nodeid(&mut self, id: SceneID, node_id: NodeId) {
-    self.from_id(id).unwrap().taffy_id = Some(node_id);
+    self.get_scene(id).unwrap().taffy_id = Some(node_id);
   }
 
   pub(crate) fn parent(&mut self, id: SceneID) -> SceneID {
-    self.from_id(id).unwrap().parent
+    self.get_scene(id).unwrap().parent
   }
 
   pub(crate) fn update_layout(&mut self, layout_mgr: &LayoutManager) {

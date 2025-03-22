@@ -25,7 +25,7 @@ impl Scene for ButtonScene {
   }
 
   fn render(&self, renderer: &mut sdl2::render::Canvas<Window>, _sprites: &mut SpriteStore) -> Result<(), String> {
-    if self.pos == None { return Ok(()) }
+    if self.pos.is_none() { return Ok(()) }
     if self.pressed {
       renderer.set_draw_color(Color::RGB(0, 100, 255));
     }
@@ -41,7 +41,7 @@ impl Scene for ButtonScene {
   }
   
   fn handle_action(&mut self, action: &Action, _origin: Option<SceneID>, action_bus: &mut ActionBus) -> bool { // for now todo 
-    if self.pos == None { return false; }
+    if self.pos.is_none() { return false; }
     match action { 
       Action::SdlEvent(event) => {
         match event {
@@ -70,7 +70,7 @@ impl Scene for ButtonScene {
 
   fn pos_changed(&mut self, rect: Rect) {
     println!("BUTTON pos changed {:?}", &rect);
-    self.pos = Some(rect.clone());
+    self.pos = Some(rect);
   }
 
   fn susbcriptions(&self) -> ActionKind {

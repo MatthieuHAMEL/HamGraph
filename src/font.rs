@@ -7,13 +7,13 @@ pub struct FontStore<'a> {
 }
 
 impl<'a> FontStore<'a> {
+  // (TODO?) clippy "you should consider adding a `Default` implementation for `FontStore<'a>`"
   pub fn new() -> Self {
     Self { fonts: HashMap::new() }
   }
 
   pub fn get(&'a self, name: String) -> &'a Font<'a, 'static> {
-    &self.fonts.get(&name).unwrap_or_else(|| {
-      println!();
+    self.fonts.get(&name).unwrap_or_else(|| {
       panic!("{}", format!("No such font !... {}", &name))
     })
   }
@@ -30,10 +30,8 @@ impl<'a> FontStore<'a> {
     let entries = fs::read_dir(fonts_folder)
       .unwrap_or_else(|e| panic!("{}", format!("Failed to read directory: {}", e)));
 
-    for entry in entries 
-    {
-      let entry = entry
-        .unwrap_or_else(|e| panic!("{}", format!("Failed to read entry: {}", e)));
+    for entry in entries {
+      let entry = entry.unwrap_or_else(|e| panic!("{}", format!("Failed to read entry: {}", e)));
       let path = entry.path();
 
       // Check if it's a file ending in .ttf

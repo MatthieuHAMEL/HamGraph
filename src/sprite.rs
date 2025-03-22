@@ -63,7 +63,7 @@ impl<'a> SpriteStore<'a>
 
     let dest_rect = Rect::new(x, y, sprite.src_rect.width(), sprite.src_rect.height());
     
-    canvas.copy(&tex, sprite.src_rect, dest_rect).unwrap();
+    canvas.copy(tex, sprite.src_rect, dest_rect).unwrap();
   }
 
   pub fn shared_len(&self) -> Rc<Cell<usize>> {
