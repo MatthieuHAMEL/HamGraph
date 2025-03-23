@@ -1,4 +1,4 @@
-use std::panic;
+use std::{env, panic};
 use sdl2::image;
 use sdl2::image::Sdl2ImageContext;
 use sdl2::mixer::{Sdl2MixerContext, AUDIO_S16LSB, DEFAULT_CHANNELS};
@@ -13,6 +13,7 @@ use winapi::shared::windef::DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2;
 use winapi::um::winuser::SetProcessDpiAwarenessContext;
 
 use crate::errors::{self, prompt_err};
+use crate::logger;
 
 // Initializations are grouped, mainly for readability: 
 // I may group them differently in the future. -- TODO
@@ -29,6 +30,9 @@ pub fn init_sdl2(
      Sdl2MixerContext,
      Canvas<Window>) 
 {
+  let log_stdout = env::var("HAMGRAPH_STDOUT").is_ok();
+  logger::init_logger(!log_stdout, "scene=debug,layout=info");
+
   panic::set_hook(Box::new(|panic_info| 
     {
       // Extract the panic message (if present)

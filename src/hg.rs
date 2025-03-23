@@ -1,10 +1,12 @@
 use std::time::{Duration, Instant};
 
 use sdl2::{event::{Event, WindowEvent}, image::Sdl2ImageContext, keyboard::Keycode, mixer::Sdl2MixerContext, mouse::MouseButton, pixels::Color, render::{Canvas, TextureCreator}, ttf::Sdl2TtfContext, video::{Window, WindowContext}, Sdl, VideoSubsystem};
+use tracing::debug;
 //use taffy::print_tree;
 use crate::{action::Action, action_bus::{ActionBus, ActionPriv}, font::FontStore, infraglobals, init, layout_manager::LayoutManager, logger, mixer_manager::MixerManager, scene::{Scene, SceneID, SceneStack}, sprite::SpriteStore};
 
 pub use crate::infraglobals::set_install_path;
+pub use crate::infraglobals::set_userdata_path;
 
 #[derive(Debug, Clone)]
 pub enum HamID {
@@ -53,10 +55,11 @@ pub struct HamGraph<'a> {
 impl<'a> HamGraph<'a> 
 {
   pub fn new(hamsdl2: &'a mut HamSdl2, mut root_scene: Box<dyn Scene>) -> Self {
-    logger::init_logger(false, "scene=debug,layout=info");
-    
+      
     let sprite_store = SpriteStore::new(&mut hamsdl2.texture_creator);
 
+    debug!(target: "scene", "Testing scene...");
+    
     let mut action_bus = ActionBus::new(sprite_store.shared_len());
     root_scene.init(&mut action_bus);
 
