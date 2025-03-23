@@ -1,0 +1,76 @@
+HAMGRAPH changelog
+
+----- v0.0 (01/10/24) -----
+Sprites handling with json configuration - using SERDE.
+
+----- v0.1 (17/11/24) -----
+- Global config of resource paths (data, etc)
+- Function initialiing the SDL2 and get subsystems, canvas, ...
+
+----- v0.2 (08/12/24) -----
+- Scene trait, base implementations, SceneStack 
+  - Rendering is from bottom to top of the stack since there are layers. 
+  - Input handling is from top to bottom and stops at first modal scene.
+- HamGraph struct containing the SpriteStore and the SceneStack.
+  - Function run_main_loop
+- Playing with VSYNC
+  
+----- v0.3 (24/12/24) ----- 
+- Relations between scenes : to support more complete layering, 
+SceneStack is a collection of layers, every layer being a collection of scenes.
+- Doesn't change the rest of the model. 
+- ButtonScene, "clickable zone"
+
+----- v.0.4 (26/12/24) -----
+- Event system : actions SDL2, engine actions, user-defined actions.
+- Scene::init(), update() ... (user-defined callbacks) can push actions in the Bus.
+- The engine then reads those actions
+  - Some are for the engine itself (create another scene, play music, ...)
+  - Some are meant to be dispatched to other scenes
+  - ... The engine calls the handle_action user defined callback to the scene receiving such messages.
+  - On SDL2 events, that same handle_action function is called.
+- Action::ButtonPressed 
+
+----- v0.5 (27/12/24) ----- 
+- Music & sound
+  - MixerManager 
+  - Actions : PlayMusic, StopMusic, PlaySfx 
+  - Tests & applications (cf whip_client v0.5)
+
+----- v0.6 (28/12/24) -----
+- Subscription system & other optimizations 
+- ActionKind Enum. Not ideal for now, cf the TODOs ... 
+
+----- v0.7 (01/01/25) -----
+- Layout :
+- Computing coordinates of UI elements following the CSS FlexBox spec 
+  - Using the taffy crate.
+  - For now taffy structures are directly exposed
+
+----- v0.8 (03/01/25) ----- 
+- Abstracted taffy structures from the public interface (cf. LayoutManager)
+
+----- v0.9 (01/02/25) -----
+- Text with sdl2::ttf : TextScene, CreateText command creating a TTF texture.
+  - Text layout, sizing, anti-aliasing 
+- Global panic! catching allowing prompting any fatal error to my message box.
+
+----- v0.10 (24/03/25) -----
+- Integrated a logger (tracing crate)
+  - Replaced most of the println! by logger calls.
+  - Structured into categories - hg::scene, hg::action, hg::bus, hgui::button, ...
+- Big clean up, of style, warnings etc. 
+- Separated "userdata path" from "install path"
+- Abstracted the SDL2 intialization to the user.
+  - Struct HamSdl2 that the user "gives" to HamGraph::new().
+- Simplified the next_scene_id wrt the Bus (better synchronization...)
+- Beginning of SceneStack unit testing.
+
+------------------------------------------------------
+
+Quick TODOLIST for next days :
+- Provide samples
+- Continue unit testing 
+- Improve some logger messages to give a better context
+- Improve TTF texture handling, layouting, resizing. 
+- Implement various UI elements (tooltips, sliding bars, text fields and so on)
