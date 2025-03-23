@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 use sdl2::{event::Event, rect::Rect, video::Window};
 use taffy::NodeId;
+use tracing::debug;
 use crate::{action::{Action, ActionKind}, action_bus::{ActionBus, ActionPriv}, layout_manager::LayoutManager, sprite::SpriteStore, utils::is_point_in_rect};
 
 // Unique identifier for each scene.
@@ -51,9 +52,8 @@ impl Scene for RootScene {}
 
 pub struct SceneStack {
   // Each entry is a list (stack) of scenes for that layer.
-  // For example, is background scenes, layers[1] game world scenes... etc
+  // For example, layers[0] is background scenes, layers[1] game world scenes... etc
   scenes_priv: Vec<Vec<ScenePriv>>, 
- // pub(crate)next_id: SceneID
 }
 
 impl SceneStack 
@@ -82,11 +82,11 @@ impl SceneStack
     id
   }
 
-  pub(crate) fn remove_scene(&mut self, scene_id: SceneID) {
+  pub(crate) fn remove_scene(&mut self, id: SceneID) -> bool {
     let mut ids_to_remove = HashSet::new();
-    self.collect_descendants(scene_id, &mut ids_to_remove);
+    self.collect_descendants(id, &mut ids_to_remove);
 
-    println!("Found descendants : {:#?}", ids_to_remove);
+    debug!(target: "hg::scene", "Remove {} ... Found descendants : {:#?}", id, ids_to_remove);
     let mut found = false;
     for layer_vec in &mut self.scenes_priv {
       layer_vec.retain(|sc_p| {
@@ -99,12 +99,12 @@ impl SceneStack
       });
     }
 
-    // Not even the parent scene was found
     if !found {
-      // Maybe on some debug mode, raise something ... (assert)
-      println!("Scene not found in remove_scene.") ; // but is it even bad ? ..
-      // hey your scene doesnt exist man
+      // Nothing was found (the scene to remove, nor the descendants of course)
+      debug!(target: "hg::scene", "Scene not found in remove_scene.");
     }
+
+    found
   }
 
   // Recursive function to collect all descendants using the `children` vector
@@ -220,8 +220,7 @@ impl SceneStack
   }
 
   pub(crate) fn get_scene(&mut self, id: SceneID) -> Option<&mut ScenePriv> {
-    for layer_vec in &mut self.scenes_priv 
-    {
+    for layer_vec in &mut self.scenes_priv {
       if let Some(pos) = layer_vec.iter().position(|sc_p| sc_p.id == id) {
         return Some(&mut layer_vec[pos]);
       }
