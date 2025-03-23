@@ -20,3 +20,4 @@ pub use hg::HamGraph;
 pub use hg::HamSdl2;
 
 mod utils;
+mod logger;

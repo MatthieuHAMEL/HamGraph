@@ -9,6 +9,9 @@ dirs = "5.0"
 bitflags = "2"
 taffy = "0.7.1"
 winapi = { version = "0.3", features = ["winuser"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
+tracing-appender = "0.2"
 
 [dependencies.sdl2]
 version = "0.37"
