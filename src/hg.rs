@@ -1,7 +1,7 @@
 use std::time::{Duration, Instant};
 
 use sdl2::{event::{Event, WindowEvent}, image::Sdl2ImageContext, keyboard::Keycode, mixer::Sdl2MixerContext, mouse::MouseButton, pixels::Color, render::{Canvas, TextureCreator}, ttf::Sdl2TtfContext, video::{Window, WindowContext}, Sdl, VideoSubsystem};
-use tracing::debug;
+use tracing::{debug, info, warn};
 //use taffy::print_tree;
 use crate::{action::Action, action_bus::{ActionBus, ActionPriv}, font::FontStore, infraglobals, init, layout_manager::LayoutManager, logger, mixer_manager::MixerManager, scene::{Scene, SceneID, SceneStack}, sprite::SpriteStore};
 
@@ -58,13 +58,14 @@ impl<'a> HamGraph<'a>
       
     let sprite_store = SpriteStore::new(&mut hamsdl2.texture_creator);
 
-    debug!(target: "scene", "Testing scene...");
+    info!(target: "hg::init", "Initializing HAMGRAPH...");
     
     let mut action_bus = ActionBus::new(sprite_store.shared_len());
     root_scene.init(&mut action_bus);
 
     let wdim = hamsdl2.canvas.window().size();
-    println!("Window dimensions: {:?}", wdim);
+    info!(target: "hg::init", "Window dimensions: {:?}", wdim);
+    
     let layout_manager = LayoutManager::new(wdim);
 
     let mut font_store = FontStore::new();
@@ -94,9 +95,10 @@ impl<'a> HamGraph<'a>
     if self.scene_stack.get_scene(parent).is_some() {
       real_parent = parent;
     }
-    println!("Registering id=<{}>, parent=<{}>", id, real_parent);
+    debug!(target: "hg::scene", "Registering id=<{}>, parent=<{}>", id, real_parent);
+
     let id2 = self.scene_stack.push(layer, scene, id, real_parent); 
-    if id != id2 { // use some assert
+    if id != id2 { // use some assert (TODO)
       panic!("IDs inconsistency");
     }
     self.action_bus.prepare(id);
@@ -143,10 +145,11 @@ impl<'a> HamGraph<'a>
       Action::RequestLayout (lay) => {
         self.layout_manager.set_layout(action_p.source_scene, &mut self.scene_stack, lay);
       },
-      _ => { println!("warning : user action left unhandled!"); }
+      _ => { 
+        warn!(target: "hg::action", "!! User action left unhandled!");
+      }
     }
   }
-
 
   pub fn run_main_loop(&mut self)  // TODO interface
   {
@@ -236,7 +239,7 @@ impl<'a> HamGraph<'a>
         std::thread::sleep(target_frame_duration - frame_duration);
       } // else application is quite overwhelmed! ... 
       else { // temp 
-        println!("HAMGRAPH is overwhelmed!");
+        println!("HAMGRAPH is overwhelmed!"); // ?
       }
     }
   }

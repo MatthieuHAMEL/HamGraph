@@ -1,5 +1,7 @@
 use std::{cell::Cell, rc::Rc};
 
+use tracing::debug;
+
 use crate::{action::Action, hg::HamID, scene::SceneID};
 
 pub(crate) struct ActionPriv {
@@ -59,7 +61,7 @@ impl ActionBus {
   // For scene creation actions it will return an ID 
   // Maybe it can be extended to other ID/Handle-Based mechanisms.
   pub fn push(&mut self, action: Action) -> Option<HamID> {
-    println!("Action pushed in bus.");
+    debug!(target: "hg::bus", "Action pushed in bus.");
     let mut ret: Option<HamID> = None;
     if let Action::CreateScene { .. } = action { // TODO abstract here with "Action is a CreationAction"
       ret = Some(HamID::SceneID(self.next_scene_id));

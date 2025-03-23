@@ -1,6 +1,7 @@
 // Temporary placed here. To be part of HamUI. 
 use crate::{action::{Action, ActionKind}, action_bus::ActionBus, layout_manager::Layout, scene::{Scene, SceneID}, sprite::SpriteStore, text_scene::TextScene, utils::is_point_in_rect};
 use sdl2::{event::Event, mouse::MouseButton, pixels::Color, rect::Rect, video::Window};
+use tracing::debug;
 
 pub struct ButtonScene {
   pos: Option<Rect>,
@@ -19,7 +20,6 @@ impl ButtonScene {
 impl Scene for ButtonScene {
   fn name(&self) -> &str { &self.lil_name }
   fn init(&mut self, bus: &mut ActionBus) {
-    println!("=== Init Button");
     bus.push(Action::RequestLayout(self.layout.clone()));
     bus.push(Action::CreateScene { scene: Box::new(TextScene::new(self.lil_name.clone(), "big".to_owned())), layer: 4 /*URGENT TODO  */ });
   }
@@ -46,7 +46,7 @@ impl Scene for ButtonScene {
       Action::SdlEvent(event) => {
         match event {
           Event::MouseButtonDown{ mouse_btn: MouseButton::Left, .. } => { 
-            println!("Clicked on {}", &self.lil_name); 
+            debug!(target: "hgui::button", "Clicked on {}", &self.lil_name);
             self.pressed = true;
             true
           }, 
@@ -54,7 +54,7 @@ impl Scene for ButtonScene {
             if !self.pressed {
               return false; // Probably not for us 
             }
-            println!("Button up !");
+            debug!(target: "hgui::button", "Button up!");
             self.pressed = false;
             if is_point_in_rect(&self.pos.unwrap(), *x, *y) {
               action_bus.push(Action::ButtonPressed);
@@ -69,7 +69,7 @@ impl Scene for ButtonScene {
   }
 
   fn pos_changed(&mut self, rect: Rect) {
-    println!("BUTTON pos changed {:?}", &rect);
+    debug!(target: "hgui::button", "Pos changed to {:?}", &rect);
     self.pos = Some(rect);
   }
 
