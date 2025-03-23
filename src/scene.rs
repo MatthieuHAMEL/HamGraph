@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use sdl2::{event::Event, rect::Rect, video::Window};
 use taffy::NodeId;
-use tracing::debug;
+use tracing::{debug, warn};
 use crate::{action::{Action, ActionKind}, action_bus::{ActionBus, ActionPriv}, layout_manager::LayoutManager, sprite::SpriteStore, utils::is_point_in_rect};
 
 // Unique identifier for each scene.
@@ -54,6 +54,7 @@ pub struct SceneStack {
   // Each entry is a list (stack) of scenes for that layer.
   // For example, layers[0] is background scenes, layers[1] game world scenes... etc
   scenes_priv: Vec<Vec<ScenePriv>>, 
+  next_scene_id: SceneID,
 }
 
 impl SceneStack 
@@ -65,28 +66,32 @@ impl SceneStack
 
     scenes_priv[0].push(engine_root); // the engine root scene
     scenes_priv[0].push(ScenePriv::new(1, 0, user_root_scene)); // the user root scene
-    Self { scenes_priv }
+    Self { scenes_priv, next_scene_id: 2 }
   }
 
-  pub(crate) fn push(&mut self, layer: usize, scene: Box<dyn Scene>, id: SceneID, parent: SceneID) -> SceneID
+  pub(crate) fn next_scene_id(&self) -> SceneID {
+    self.next_scene_id
+  }
+
+  pub(crate) fn push(&mut self, layer: usize, scene: Box<dyn Scene>, parent: SceneID) // TODO result or anything
   {
-    println!("New scene requested : id=<{}>, name=<{}>", id, scene.name());
-    self.scenes_priv[layer].push(ScenePriv::new(id, parent, scene));
+    let new_scene_id = self.next_scene_id;
+    debug!("New scene requested : id=<{}>, name=<{}>, parent=<{}>", new_scene_id, scene.name(), parent);
+    self.scenes_priv[layer].push(ScenePriv::new(new_scene_id, parent, scene));
 
     // Add children 
      // If detached mode, pass 0 anyway, so, .. ok 
-    println!("Pushing scene id=<{}>, parent=<{}>", id, parent);
     if let Some(parent_scene) = self.get_scene(parent) {
-      parent_scene.children.push(id); // If parent scene is dead we are bad 
+      parent_scene.children.push(new_scene_id); // If parent scene is dead we are bad 
     }
-    id
+    self.next_scene_id += 1;
   }
 
   pub(crate) fn remove_scene(&mut self, id: SceneID) -> bool {
     let mut ids_to_remove = HashSet::new();
     self.collect_descendants(id, &mut ids_to_remove);
 
-    debug!(target: "hg::scene", "Remove {} ... Found descendants : {:#?}", id, ids_to_remove);
+    debug!(target: "hg::scene", "Remove {} -> found descendants : {:#?}", id, ids_to_remove);
     let mut found = false;
     for layer_vec in &mut self.scenes_priv {
       layer_vec.retain(|sc_p| {
@@ -133,7 +138,7 @@ impl SceneStack
     // Update bottom to top, just like rendering
     for layer in &mut self.scenes_priv {
       for sc_p in layer.iter_mut() {
-        action_bus.prepare(sc_p.id);
+        action_bus.prepare(sc_p.id, self.next_scene_id);
         sc_p.scene.update(delta_time, action_bus);
       }
     }
@@ -181,7 +186,7 @@ impl SceneStack
         }
 
         // Call the user handler
-        action_bus.prepare(scene_priv.id);
+        action_bus.prepare(scene_priv.id, self.next_scene_id);
         if scene_priv.scene.handle_action(&action, None, action_bus) {
           return;
         } // If the event was consumed or the scene is modal, I stop traversing
@@ -203,10 +208,11 @@ impl SceneStack
       let layer = &mut self.scenes_priv[layer_index];
       for sc_idx in (0..layer.len()).rev()
       {
+        let next_scene_id = self.next_scene_id;
         let scene_priv = &mut layer[sc_idx];
 
         // CALL THE USER HANDLER
-        action_bus.prepare(scene_priv.id);
+        action_bus.prepare(scene_priv.id, next_scene_id);
         if scene_priv.scene.handle_action(&action_p.action, Some(action_p.source_scene), action_bus) {
           return;
         } // If the event was consumed or the scene is modal, I stop traversing
@@ -233,7 +239,7 @@ impl SceneStack
       scene_p.taffy_id
     }
     else {
-      println!("Warning! No scene found for id {}", id);
+      warn!(target: "hg::scene", "Warning! No scene found for id {}", id);
       None
     }
   }
@@ -261,5 +267,34 @@ impl SceneStack
         } 
       }
     }
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  struct TestScene {}
+  impl TestScene{fn new() -> Self { Self{} }}
+  impl Scene for TestScene {}
+
+  #[test]
+  fn test_push_and_get_scene() {
+    let mut stack = SceneStack::new(Box::new(TestScene::new()), NodeId::new(1));
+
+    // Test there are 2 scenes in the stack
+    assert_eq!(stack.next_scene_id, 2);
+    assert!(stack.get_scene(0).is_some());
+    assert!(stack.get_scene(1).is_some());
+    assert!(stack.get_scene(2).is_none());
+    assert!(stack.get_scene(327).is_none());
+
+    // Push a new scene on layer 0
+    stack.push(0, Box::new(TestScene::new()), 1);
+
+    assert_eq!(stack.next_scene_id, 3);
+
+    // Now it should be there.
+    assert!(stack.get_scene(2).is_some());
   }
 }

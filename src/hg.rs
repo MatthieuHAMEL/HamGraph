@@ -96,12 +96,8 @@ impl<'a> HamGraph<'a>
       real_parent = parent;
     }
     debug!(target: "hg::scene", "Registering id=<{}>, parent=<{}>", id, real_parent);
-
-    let id2 = self.scene_stack.push(layer, scene, id, real_parent); 
-    if id != id2 { // use some assert (TODO)
-      panic!("IDs inconsistency");
-    }
-    self.action_bus.prepare(id);
+    self.scene_stack.push(layer, scene, real_parent); 
+    self.action_bus.prepare(id, self.scene_stack.next_scene_id());
    // self.action_bus.next_sprite_id = self.sprite_store.size();
     self.scene_stack.init(id, &mut self.action_bus);
   }

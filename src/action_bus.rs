@@ -31,11 +31,9 @@ pub struct ActionBus {
   // This is the case of "creation actions". We returned a HamID to the user, like a 
   // sprite ID. So the user expects to be able to use it in its render() method ... 
   prioritary: Vec<ActionPriv>,
-  // it should actually be a generic object ID and the scene stack shouldn't decide of the scene IDs
-  pub(crate) next_scene_id: SceneID,
-  // Used to return IDs to implementations that push actions that return a handle, 
-  // CreateXXX... like CreateScene returning a sceneID
-
+  // The prepare() function transfers the "next_scene_id" given by SceneStack to the Bus.
+  // The bus only increments it if it receives several CreateScene actions.
+  pub(crate) future_scene_id: SceneID,
 }
 
 impl ActionBus {
@@ -48,13 +46,14 @@ impl ActionBus {
 
       actions_priv: Vec::new(),
       prioritary: Vec::new(),
-      next_scene_id: 2 // as root scene is 0, user root scene 1, and other scenes must be created using Actions
+      future_scene_id: 0 // as root scene is 0, user root scene 1, and other scenes must be created using Actions
     }
   }
 
   // Sync with the other data structures ... 
-  pub fn prepare(&mut self, cur_processed_scene: SceneID) {
+  pub fn prepare(&mut self, cur_processed_scene: SceneID, next_scene_id: SceneID) {
     self.cur_processed_scene = cur_processed_scene;
+    self.future_scene_id = next_scene_id;
   }
 
   // Allow pushing actions, make it public
@@ -64,8 +63,9 @@ impl ActionBus {
     debug!(target: "hg::bus", "Action pushed in bus.");
     let mut ret: Option<HamID> = None;
     if let Action::CreateScene { .. } = action { // TODO abstract here with "Action is a CreationAction"
-      ret = Some(HamID::SceneID(self.next_scene_id));
-      self.next_scene_id += 1;
+      debug!(target="hg::bus", "User asked for new scene - provided id=<{}>", self.future_scene_id);
+      ret = Some(HamID::SceneID(self.future_scene_id));
+      self.future_scene_id += 1;
     }
     else if let Action::CreateText { .. } = action {
       ret = Some(HamID::SpriteID(self.next_sprite_id.get() + self.sprite_id_offset));
