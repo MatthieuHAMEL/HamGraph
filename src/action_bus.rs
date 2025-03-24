@@ -1,7 +1,5 @@
 use std::{cell::Cell, rc::Rc};
-
 use tracing::debug;
-
 use crate::{action::Action, hg::HamID, scene::SceneID};
 
 pub(crate) struct ActionPriv {
@@ -18,7 +16,6 @@ impl ActionPriv {
     Self { source_scene, back_id, action }
   }
 }
-
 
 pub struct ActionBus {
   cur_processed_scene: SceneID, // To set the right source scene ID when actions are pushed

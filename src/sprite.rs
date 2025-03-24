@@ -49,8 +49,6 @@ impl<'a> SpriteStore<'a>
 
   pub fn render(&mut self, canvas: &mut WindowCanvas, sprite_id: usize, x: i32, y: i32, alpha: Option<u8>) 
   {
-    //println!("[TODO DEBUG] There are {} sprites in the sprite store", &self.store.len());
-
     // Find the sprite metadata in the registry
     let sprite = &self.store[sprite_id];
     // If the texture hasn't been set yet, load it now
@@ -71,7 +69,6 @@ impl<'a> SpriteStore<'a>
   }
 
   pub fn create_ttf_texture(&mut self, font_store: &FontStore, font_name: String, text: String) -> usize {
-    println!("[DEBUG TODO]==== Creating a TTF Texture ! ");
     let font = font_store.get(font_name); 
     
     // Render text to a surface, and convert surface to a texture
@@ -85,18 +82,15 @@ impl<'a> SpriteStore<'a>
   }
 }
 
-struct Sprite
-{
+struct Sprite {
   src_rect: Rect,      // Source rectangle defining the sprite's portion in the texture
   //scenes: Vec<String>,  // Scenes where this sprite is used (TODO scenename)
   texture_id: usize // the index of the texture path in the texture path vector
 }
 
-impl Sprite
-{
-  pub fn new(src_rect: Rect, texture_id: usize) -> Sprite
-  {
-    Sprite { src_rect, /* scenes: Vec::new() ,*/ texture_id}
+impl Sprite {
+  pub fn new(src_rect: Rect, texture_id: usize) -> Sprite {
+    Sprite { src_rect, texture_id}
   }
 }
 
@@ -126,8 +120,7 @@ use std::fs::File;
 use std::io::BufReader;
 use serde_json::from_reader;
 
-pub fn load_sprites_from_json(file_path: &PathBuf) -> SpriteDescJsonRep 
-{
+pub fn load_sprites_from_json(file_path: &PathBuf) -> SpriteDescJsonRep {
   let file = File::open(file_path)
     .unwrap_or_else(|err| { prompt_err_and_panic("load_sprites_from_json failed(open)", &err.to_string(), None); });
   let reader = BufReader::new(file);

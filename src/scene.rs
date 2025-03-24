@@ -88,6 +88,9 @@ impl SceneStack
   }
 
   pub(crate) fn remove_scene(&mut self, id: SceneID) -> bool {
+    if id == 0 {
+      return false; // Cannot remove the root scene
+    }
     let mut ids_to_remove = HashSet::new();
     self.collect_descendants(id, &mut ids_to_remove);
 
@@ -270,6 +273,8 @@ impl SceneStack
   }
 }
 
+////////////////////////////////////////////////////////////
+
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -296,5 +301,93 @@ mod tests {
 
     // Now it should be there.
     assert!(stack.get_scene(2).is_some());
+  }
+
+  #[test]
+  fn test_remove_scene_same_layer() {
+    let mut stack = SceneStack::new(Box::new(TestScene::new()), NodeId::new(1));
+    stack.push(0, Box::new(TestScene::new()), 1); // Id should be 2
+    assert_eq!(stack.next_scene_id, 3);
+    assert!(stack.get_scene(2).is_some());
+    let mut removed = stack.remove_scene(2);
+    assert!(removed);
+    assert!(stack.get_scene(2).is_none());
+
+    assert!(stack.get_scene(1).is_some());
+    removed = stack.remove_scene(1);
+    assert!(removed);
+    assert!(stack.get_scene(1).is_none());
+
+    assert!(stack.get_scene(0).is_some());
+    removed = stack.remove_scene(0);
+    // We shouldn't be able to remove engine root scene
+    assert!(!removed);
+    assert!(stack.get_scene(0).is_some());
+  }
+
+  #[test]
+  fn test_parent() {
+    let mut stack = SceneStack::new(Box::new(TestScene::new()), NodeId::new(1));
+    assert_eq!(stack.parent(1), 0);
+
+    stack.push(0, Box::new(TestScene::new()), 1); // Id should be 2
+    assert_eq!(stack.parent(2), 1);
+
+    stack.push(0, Box::new(TestScene::new()), 2); // 3
+    assert_eq!(stack.parent(3), 2);
+
+    // Let's try on a different layer, it shouldn't change anything
+    stack.push(1, Box::new(TestScene::new()), 1); // 4
+    assert_eq!(stack.parent(4), 1);
+  }
+
+  #[test]
+  fn test_prune() {
+    let mut stack = SceneStack::new(Box::new(TestScene::new()), NodeId::new(1));
+    stack.push(3, Box::new(TestScene::new()), 1); // id 2
+    stack.push(4, Box::new(TestScene::new()), 2); // id 3
+    stack.push(2, Box::new(TestScene::new()), 1); // id 4
+    stack.push(6, Box::new(TestScene::new()), 1); // id 5
+    stack.push(6, Box::new(TestScene::new()), 2); // id 6
+    
+    // Assert all the scenes are there ...
+    for i in 0..=6 {
+      assert!(stack.get_scene(i).is_some());
+    }
+    // ... Not more!
+    assert!(stack.get_scene(7).is_none());
+
+    // Now prune id 2
+    let mut removed = stack.remove_scene(2);
+    assert!(removed);
+
+    // Check that childs of node 2, as long as 2, have disappeared
+    assert!(stack.get_scene(2).is_none());
+    assert!(stack.get_scene(3).is_none());
+    assert!(stack.get_scene(6).is_none());
+
+    // Check that the others are still there
+    assert!(stack.get_scene(0).is_some());
+    assert!(stack.get_scene(1).is_some());
+    assert!(stack.get_scene(4).is_some());
+    assert!(stack.get_scene(5).is_some());
+
+    // Now add some more scenes under surviving scenes ...
+    stack.push(6, Box::new(TestScene::new()), 4); // id 7
+    stack.push(6, Box::new(TestScene::new()), 5); // id 8
+    stack.push(6, Box::new(TestScene::new()), 5); // id 9
+    assert!(stack.get_scene(7).is_some());
+    assert!(stack.get_scene(8).is_some());
+    assert!(stack.get_scene(9).is_some());
+
+    // ... And prune from ID 1 : removal depth is higher this time.
+    removed = stack.remove_scene(1);
+    assert!(removed);
+
+    // Everything should have disappeared except the root scene
+    assert!(stack.get_scene(0).is_some());
+    for i in 1..=10 {
+      assert!(stack.get_scene(i).is_none());
+    }
   }
 }

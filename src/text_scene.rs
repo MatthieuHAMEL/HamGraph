@@ -1,5 +1,4 @@
 use sdl2::{rect::Rect, render::Canvas, video::Window};
-
 use crate::{action::Action, action_bus::ActionBus, hg::HamID, layout_manager::Layout, scene::Scene, sprite::SpriteStore};
 
 pub struct TextScene {
