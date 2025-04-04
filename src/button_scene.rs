@@ -1,5 +1,5 @@
 // Temporary placed here. To be part of HamUI. 
-use crate::{action::{Action, ActionKind}, action_bus::ActionBus, layout_manager::Layout, scene::{Scene, SceneID}, sprite::SpriteStore, text_scene::TextScene, utils::is_point_in_rect};
+use crate::{action::{Action, EventKind}, action_bus::ActionBus, layout_manager::Layout, scene::{Scene, SceneID}, sprite::SpriteStore, text_scene::TextScene, utils::is_point_in_rect};
 use sdl2::{event::Event, mouse::MouseButton, pixels::Color, rect::Rect, video::Window};
 use tracing::debug;
 
@@ -73,7 +73,7 @@ impl Scene for ButtonScene {
     self.pos = Some(rect);
   }
 
-  fn susbcriptions(&self) -> ActionKind {
-    ActionKind::SdlMouseClickEvent
+  fn susbcriptions(&self) -> EventKind {
+    EventKind::SdlMouseClick
   }
 }

@@ -14,9 +14,9 @@ cargo test --tests
 
 grcov target/coverage --binary-path ../target/debug -s . -o target/coverage --output-types html,cobertura
 ```
-The 'hard' part is that, even if working in a workspace with several crates, I should have (wherever I am, here I set CWD to hamgraph, but...) : 
+The 'hard' part is that, even if working in a workspace with several crates, I should have (wherever I am, for instance here I set CWD to myWS/hamgraph) : 
 - That grcov target (first arg) pointing to myWS/hamgraph/target/coverage
   - Because those PROFRAW files were generated in the various crates' target/ folders
 - Binary path pointing to the workspace binary target, here '../target/debug' 
 
-Otherwise by pointing everything to myWS/target/coverage I didn't get anything collected for the hamgraph crate
+Otherwise by pointing everything to myWS/target/coverage I didn't get anything collected for the hamgraph crate and coverage was unexpectedly 0%...

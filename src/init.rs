@@ -19,7 +19,7 @@ use crate::logger;
 // I may group them differently in the future. -- TODO
 // ... maybe in a single struct with the different contexts ...
 // Now also initalizing the eventpump and the canvas here...
-pub fn init_sdl2(
+pub(crate) fn init_sdl2(
     win_title: &str,
     win_width: u32,
     win_height: u32,

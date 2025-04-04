@@ -3,7 +3,7 @@ use std::time::{Duration, Instant};
 use sdl2::{event::{Event, WindowEvent}, image::Sdl2ImageContext, keyboard::Keycode, mixer::Sdl2MixerContext, mouse::MouseButton, pixels::Color, render::{Canvas, TextureCreator}, ttf::Sdl2TtfContext, video::{Window, WindowContext}, Sdl, VideoSubsystem};
 use tracing::{debug, info, warn};
 //use taffy::print_tree;
-use crate::{action::Action, action_bus::{ActionBus, ActionPriv}, font::FontStore, infraglobals, init, layout_manager::LayoutManager, mixer_manager::MixerManager, scene::{Scene, SceneID, SceneStack}, sprite::SpriteStore};
+use crate::{action::{Action, EventKind}, action_bus::{ActionBus, ActionPriv}, font::FontStore, infraglobals, init, layout_manager::LayoutManager, mixer_manager::MixerManager, scene::{Scene, SceneID, SceneStack}, sprite::SpriteStore};
 
 pub use crate::infraglobals::set_install_path;
 pub use crate::infraglobals::set_userdata_path;
@@ -164,6 +164,7 @@ impl<'a> HamGraph<'a>
       // 1. HANDLE EVENTS
       for event in event_pump.poll_iter() 
       {
+        let event_kind;
         match event 
         {
           Event::Quit {..} |
@@ -172,15 +173,18 @@ impl<'a> HamGraph<'a>
             // this won't be needed once the weird stuff will have been filtered.  TODO 
           Event::MouseButtonDown {mouse_btn: MouseButton::Left, ..} 
           | Event::MouseButtonUp {mouse_btn: MouseButton::Left, ..} => {
-            let action = Action::SdlEvent(event);
-            self.scene_stack.propagate_sdl2_to_subscribers(&mut self.action_bus, action);
+            event_kind = EventKind::SdlMouseClick;
           }, 
           Event::Window { win_event: WindowEvent::Resized(w, h), ..} => {
             // Window has been resized : update the UI tree 
             self.layout_manager.set_new_window_size((w as u32, h as u32)); // TODO important manage min 
+            continue;
           }
-          _ => { /* Nothing for now */ }
+          _ => { continue; /* Nothing for now */ }
         }
+        // Here we really want to propagate the event e.g. MouseButtonDown
+        let action = Action::SdlEvent(event);
+        self.scene_stack.propagate_sdl2_to_subscribers(&mut self.action_bus, action, event_kind);
       }
 
       // 2. PROCESS ACTIONS that were ordered by the input handlers 

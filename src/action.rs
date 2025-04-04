@@ -16,22 +16,15 @@ bitflags! {
   /// Each bit stands for one type of action.
   /// todo maybe this could look less HIDEOUS
   #[derive(Clone)]
-  pub struct ActionKind: u64 {
-    const NoSubscription     = 0;
-    const SdlMouseClickEvent = 0b0000_0001;
-    const SdlMouseHoverEvent = 0b0000_0010;
-    const SdlKeyboardEvent   = 0b0000_0100;
-    const SdlMiscEvent       = 0b0000_1000;
-    const CreateScene        = 0b0001_0000;
-    const CreateText         = 0b0010_0000;
-    const CloseCurrentScene  = 0b0100_0000;
-    const CloseScene         = 0b1000_0000;
-    const StartMusic         = 0b0001_0000_0000;
-    const StopMusic          = 0b0010_0000_0000;
-    const StartSfx           = 0b0100_0000_0000;
-    const ButtonPressed      = 0b1000_0000_0000;
-    const SceneMsg           = 0b0001_0000_0000_0000;
-    const Misc     = 0b0010_0000_0000_0000;
+  pub struct EventKind: u64 {
+    const NotAnEvent         = 0;
+    const SdlMouseClick = 1 << 0;
+    const SdlMouseHover = 1 << 1;
+    const SdlKeyboard   = 1 << 2;
+    const SdlMisc       = 1 << 3;
+    const ButtonPressed = 1 << 4;
+    const SceneMsg      = 1 << 5;
+    const Misc          = 1 << 6;
   }
 }
 
@@ -81,23 +74,16 @@ pub enum Action {
 }
 
 impl Action {
-  pub fn kind(&self) -> ActionKind {
+  pub fn event_kind(&self) -> EventKind {
     match self {
       Action::SdlEvent(evt) => match evt {
-        Event::MouseButtonDown {..} | Event::MouseButtonUp {..} => ActionKind::SdlMouseClickEvent,
-        Event::KeyDown {..} | Event::KeyUp {..} => ActionKind::SdlKeyboardEvent,
-        _ => ActionKind::SdlMiscEvent
+        Event::MouseButtonDown {..} | Event::MouseButtonUp {..} => EventKind::SdlMouseClick,
+        Event::KeyDown {..} | Event::KeyUp {..} => EventKind::SdlKeyboard,
+        _ => EventKind::SdlMisc
       },
-      Action::CreateScene { .. } => ActionKind::CreateScene,
-      Action::CreateText { .. } => ActionKind::CreateText,
-      Action::CloseCurrentScene => ActionKind::CloseCurrentScene,
-      Action::CloseScene { .. } => ActionKind::CloseScene,
-      Action::ButtonPressed { .. } => ActionKind::ButtonPressed,
-      Action::RequestLayout { .. } => ActionKind::Misc, // cannot go down
-      Action::StartMusic { .. } => ActionKind::StartMusic,
-      Action::StopMusic { .. } => ActionKind::StopMusic,
-      Action::StartSfx { .. } => ActionKind::StartSfx,
-      Action::SceneMsg { .. } => ActionKind::SceneMsg,
+      Action::ButtonPressed { .. } => EventKind::ButtonPressed,
+      Action::SceneMsg { .. } => EventKind::SceneMsg,
+      _ => EventKind::NotAnEvent
     }
   }
 }

@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use sdl2::{event::Event, rect::Rect, video::Window};
 use taffy::NodeId;
 use tracing::{debug, warn};
-use crate::{action::{Action, ActionKind}, action_bus::{ActionBus, ActionPriv}, layout_manager::LayoutManager, sprite::SpriteStore, utils::is_point_in_rect};
+use crate::{action::{Action, EventKind}, action_bus::{ActionBus, ActionPriv}, layout_manager::LayoutManager, sprite::SpriteStore, utils::is_point_in_rect};
 
 // Unique identifier for each scene.
 pub type SceneID = u64;
@@ -25,7 +25,7 @@ pub trait Scene {
   fn handle_action(&mut self, _action: &Action, _origin: Option<SceneID>, _action_bus: &mut ActionBus) -> bool { false }
   fn left_click_zone(&self) -> Option<Rect> { None }
   fn pos_changed(&mut self, _pos: Rect) {  }
-  fn susbcriptions(&self) -> ActionKind { ActionKind::NoSubscription }
+  fn susbcriptions(&self) -> EventKind { EventKind::NotAnEvent }
   fn name(&self) -> &str { "Unknown" }
 }
 
@@ -156,11 +156,11 @@ impl SceneStack
     }
   }
 
-  pub fn propagate_sdl2_to_subscribers(&mut self, action_bus: &mut ActionBus, action: Action)
+  // We are already doing a match {} on sdl events in the main loop. So we directly give the event kind here
+  // Otherwise if we call action.event_kind we're back traversing every existing action.
+  pub fn propagate_sdl2_to_subscribers(&mut self, action_bus: &mut ActionBus, action: Action, event_kind: EventKind)
   {
     // if nobody subscribed to that event, just return (TODO)
-    let ak = action.kind();
-
     // Starting from the top layer to the bottom (reverse order)
     for layer_index in (0..self.scenes_priv.len()).rev() 
     {
@@ -170,7 +170,7 @@ impl SceneStack
         let scene_priv = &mut layer[sc_idx];
 
         // No need to do anything if the scene didn't subscribe to that action.
-        if !scene_priv.scene.susbcriptions().intersects(ak.clone()) {
+        if !scene_priv.scene.susbcriptions().intersects(event_kind.clone()) {
           continue;
         }
         // Filter unwanted clicks if out of the clickable zone.

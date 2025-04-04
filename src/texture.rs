@@ -82,3 +82,17 @@ impl<'a> TextureMap<'a>
     self.textures[texture_id].as_mut().unwrap().set_alpha_mod(alpha);
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  #[test]
+  fn test_texturemap() {
+    /*
+    let (sdl_ctx, img_ctx, ttf_ctx, video, mixer_ctx, canvas) 
+      = init_sdl2("HAMGRAPH TEST",300,400);
+
+    let texture_map = TextureMap::new(canvas);
+    */
+  }
+}

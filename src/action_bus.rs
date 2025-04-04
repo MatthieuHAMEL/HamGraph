@@ -64,7 +64,7 @@ impl ActionBus {
       ret = Some(HamID::SceneID(self.future_scene_id));
       self.future_scene_id += 1;
     }
-    else if let Action::CreateText { .. } = action {
+    else if let Action::CreateText { .. } = action { // Prioritary action. maybe we should just tell render to ignore invalid sprite IDs once (todo)
       ret = Some(HamID::SpriteID(self.next_sprite_id.get() + self.sprite_id_offset));
       self.prioritary.push(ActionPriv::new(self.cur_processed_scene, ret.clone(), action));
       self.sprite_id_offset += 1;
