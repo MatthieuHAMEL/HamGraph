@@ -5,43 +5,30 @@ use sdl2::video::WindowContext;
 use crate::errors::prompt_err_and_panic;
 use crate::infraglobals;
 
-pub struct TextureMap<'a>
-{
+pub struct TextureStore<'a> {
   textures: Vec<Option<Texture<'a>>>,  // The main texture holder
   filenames: Vec<String>, // In their json declaration order
   texture_creator: &'a TextureCreator<WindowContext> // SDL2 thing to load textures
 }
 
-impl<'a> TextureMap<'a>
-{
-  pub fn new(texture_creator: &'a mut TextureCreator<WindowContext>) -> TextureMap<'a>
-  {
-    TextureMap { textures: Vec::new(), filenames: Vec::new(), texture_creator }
+impl<'a> TextureStore<'a> {
+  pub fn new(texture_creator: &'a mut TextureCreator<WindowContext>, 
+             initial_texture_count: usize) -> TextureStore<'a> {
+    TextureStore { 
+      textures: Vec::with_capacity(initial_texture_count), 
+      filenames: Vec::new(), 
+      texture_creator 
+    }
   }
 
-  pub fn get_texture(&mut self, texture_id: usize) -> &Texture
-  {
-    if self.textures[texture_id].is_none() 
-    {
+  pub fn get_texture(&mut self, texture_id: usize) -> &Texture {
+    if self.textures[texture_id].is_none() {
       use sdl2::surface::Surface;
       use sdl2::image::LoadSurface;
 
       let img_path = infraglobals::get_img_path().join(&self.filenames[texture_id]);
-      let /*mut*/ s = Surface::from_file(img_path)
+      let s = Surface::from_file(img_path) // TODO use sdl_img shortcut (file --> texture directly)
         .unwrap_or_else(|err| { prompt_err_and_panic("img_load_color_key failed", &err, None); });
-      
-      /* TODO color keying 
-      it seems it is not needed with modern textures and alpha channel 
-      then we could use directly the load texture function from SDL_IMG_... 
-      match color_key 
-      {
-        Some(col) => 
-        { 
-          s.set_color_key(true, col)
-          .unwrap_or_else(|err| { prompt_err_and_panic("img_load_color_key(set_color_key) failed", &err, None); }); 
-        },
-        None => {}
-      } */
         
       let tex = s.as_texture(self.texture_creator)
         .unwrap_or_else(|err| { 
@@ -68,13 +55,11 @@ impl<'a> TextureMap<'a>
     }
 
     self.filenames.push(path);
-
-    self.textures.len() - 1
+    return self.textures.len() - 1;
   }
 
   pub fn set_alpha(&mut self, texture_id: usize, alpha: u8) {
-    // Just ensure it is loaded 
-    {
+    { // Just ensure the texture is loaded 
       let _t = self.get_texture(texture_id);
     }
 
@@ -85,14 +70,20 @@ impl<'a> TextureMap<'a>
 
 #[cfg(test)]
 mod tests {
-  use super::*;
+use crate::init::init_sdl2;
+
+use super::*;
   #[test]
   fn test_texturemap() {
-    /*
-    let (sdl_ctx, img_ctx, ttf_ctx, video, mixer_ctx, canvas) 
+    
+    let (_sdl_ctx, _img_ctx, _ttf_ctx, _video, _mixer_ctx, canvas) 
       = init_sdl2("HAMGRAPH TEST",300,400);
 
-    let texture_map = TextureMap::new(canvas);
-    */
+    let mut tc = canvas.texture_creator();
+    let texture_store = TextureStore::new(&mut tc, 10);
+    assert!(texture_store.textures.is_empty());
+    assert!(texture_store.filenames.is_empty());
+
+
   }
 }

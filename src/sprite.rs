@@ -1,6 +1,6 @@
 use crate::errors::*;
 use crate::font::FontStore;
-use crate::texture::TextureMap;
+use crate::texture::TextureStore;
 use crate::infraglobals;
 
 use sdl2::pixels::Color;
@@ -15,7 +15,7 @@ pub struct SpriteStore<'a>
 {
   store: Vec<Sprite>,
   current_len: Rc<Cell<usize>>,
-  texture_map: TextureMap<'a>
+  texture_store: TextureStore<'a>
 }
 
 impl<'a> SpriteStore<'a>
@@ -28,36 +28,33 @@ impl<'a> SpriteStore<'a>
       prompt_err_and_panic(&format!("SpriteStore Config file not found: {:?}", json_path), "", None)
     }
 
-    let mut texture_map = TextureMap::new(texture_creator);
+    // Vector of spritesheets which are themselves vectors of sprite JSON representations
+    let v_jsheets = load_sprites_from_json(&json_path);
+    let mut texture_store = TextureStore::new(texture_creator, v_jsheets.len());
 
-    // Vector of spritesheets which are themselves vectors of sprites JSON representations
-    let jsheetslist = load_sprites_from_json(&json_path);
+    // Fill in the sprite store with sprites pointing to empty textures (no surface loading)
     let mut store = Vec::new();
-    for jsheet in jsheetslist 
-    {
-      let tex_id = texture_map.push_new_texture(jsheet.file, None);
-      for jsprite in jsheet.sprites 
-      {
-        println!("Sprite {} made alone ? {:?}",jsprite.name, jsprite.make_alone);
-        store.push(Sprite::new(Rect::new(jsprite.x, jsprite.y, jsprite.w, jsprite.h), 
-                  tex_id));
+    for jsheet in v_jsheets { // 1 sheet == 1 texture == N sprites
+      let tex_id = texture_store.push_new_texture(jsheet.file, None);
+      for js in jsheet.sprites { // js is the json representation of a sprite
+        println!("Sprite {} made alone ? {:?}",js.name, js.make_alone);
+        store.push(Sprite::new(Rect::new(js.x, js.y, js.w, js.h), tex_id));
       }
     }
     let cur_len: usize = store.len();
-    SpriteStore { store, current_len: Rc::new(Cell::new(cur_len)), texture_map }
+    SpriteStore { store, current_len: Rc::new(Cell::new(cur_len)), texture_store }
   }
 
-  pub fn render(&mut self, canvas: &mut WindowCanvas, sprite_id: usize, x: i32, y: i32, alpha: Option<u8>) 
-  {
+  pub fn render(&mut self, canvas: &mut WindowCanvas, sprite_id: usize, x: i32, y: i32, alpha: Option<u8>) {
     // Find the sprite metadata in the registry
     let sprite = &self.store[sprite_id];
     // If the texture hasn't been set yet, load it now
     // It may not be set as the texture of that sprite but the texture may have been loaded before!
     
     if let Some(alph) = alpha {
-      self.texture_map.set_alpha(sprite.texture_id, alph);
+      self.texture_store.set_alpha(sprite.texture_id, alph);
     } 
-    let tex = self.texture_map.get_texture(sprite.texture_id) ;
+    let tex = self.texture_store.get_texture(sprite.texture_id) ;
 
     let dest_rect = Rect::new(x, y, sprite.src_rect.width(), sprite.src_rect.height());
     
@@ -75,7 +72,7 @@ impl<'a> SpriteStore<'a>
     let surface = font.render(&text).blended(Color::RGB(0, 0, 50)).unwrap() ;// TODO color custo 
     let (w, h) = (surface.width(), surface.height());
 
-    let tex_id = self.texture_map.push_new_texture("".to_owned(), Some(surface));
+    let tex_id = self.texture_store.push_new_texture("".to_owned(), Some(surface));
     self.store.push(Sprite::new(Rect::new(0, 0, w, h), tex_id));
     self.current_len.set(self.current_len.get() + 1);
     tex_id
@@ -104,7 +101,7 @@ pub struct SpriteJsonRep {
   y: i32,
   w: u32,
   h: u32,
-  make_alone: Option<bool>
+  make_alone: Option<bool> // The sprite should have its own texture (TODO useful ?)
 }
 
 #[derive(Deserialize, Debug)]
