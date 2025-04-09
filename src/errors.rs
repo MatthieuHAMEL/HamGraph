@@ -22,6 +22,8 @@ pub fn prompt_err_and_panic(message: &str, error: &str, window: Option<&Window>)
 }
 
 // Prompt err, without panicking. 
+// Used in the "panic hook".
+#[cfg(not(test))]
 pub fn prompt_err(message: &str, window: Option<&Window>) 
 {
   use sdl2::messagebox::*;
@@ -33,3 +35,9 @@ pub fn prompt_err(message: &str, window: Option<&Window>)
     window,
   ).unwrap(); 
 }
+
+// ... In tests we do nothing then
+// Since it is used in the panic hook, no worries, it will panic!
+// But we must not prompt error boxes for simple automated tests. 
+#[cfg(test)]
+pub fn prompt_err(_message: &str, _window: Option<&Window>) { /* °u° */}

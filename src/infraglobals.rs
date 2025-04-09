@@ -58,3 +58,17 @@ pub fn get_ttf_path() -> PathBuf {
 pub fn get_logger_path() -> PathBuf {
   get_userdata_path().join("log")
 }
+
+
+#[cfg(test)] // TODO use crate ctor ? simpler in test context. 
+pub fn setup_test_folder() {
+  set_install_path(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("test").join("data"))
+}
+
+/*
+#[cfg(test)]
+// Prec: setup_test_folder has been called.
+pub fn get_test_img_path() -> PathBuf {
+  get_userdata_path().join("data").join("img")
+}
+*/

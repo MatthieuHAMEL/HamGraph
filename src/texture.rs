@@ -45,9 +45,8 @@ impl<'a> TextureStore<'a> {
     if let Some(surface) = opt_surface {
       if !path.is_empty() {
         panic!("Direct texture creation from surface is only supported for TTF");
-      }
-      let texture = self.texture_creator
-        .create_texture_from_surface(&surface).unwrap();
+      } // cause it wouldnt be lazy texture creation.... 
+      let texture = self.texture_creator.create_texture_from_surface(&surface).unwrap();
       self.textures.push(Some(texture));
     }
     else {
@@ -68,22 +67,69 @@ impl<'a> TextureStore<'a> {
   }
 }
 
+/////////////////////////////////////////////
+
 #[cfg(test)]
 mod tests {
-use crate::init::init_sdl2;
+  use crate::init::init_sdl2;
 
-use super::*;
-  #[test]
-  fn test_texturemap() {
-    
+  use super::*;
+
+  fn init_sdl2_context() -> TextureCreator<WindowContext>{
+    infraglobals::setup_test_folder();
+
     let (_sdl_ctx, _img_ctx, _ttf_ctx, _video, _mixer_ctx, canvas) 
-      = init_sdl2("HAMGRAPH TEST",300,400);
+      = init_sdl2("HAMGRAPH TEST", 300, 400);
 
-    let mut tc = canvas.texture_creator();
-    let texture_store = TextureStore::new(&mut tc, 10);
+    canvas.texture_creator()
+  }
+
+  fn load_some_textures<'a>(tc: &'a mut TextureCreator<WindowContext>) -> TextureStore<'a> {
+    let mut texture_store = TextureStore::new(tc, 10);
     assert!(texture_store.textures.is_empty());
     assert!(texture_store.filenames.is_empty());
 
+    for _ in 0..5 {
+      texture_store.push_new_texture(
+        "test_sprite.png".to_string(), None);
+      texture_store.push_new_texture(
+        "test_sprite_2.png".to_string(), None);
+    }
 
+    texture_store
+  }
+
+  #[test]
+  fn test_texturemap_get_texture() {
+    let mut ctx = init_sdl2_context();
+    let mut texture_store = load_some_textures(&mut ctx);
+    for i in 0..10 {
+      texture_store.get_texture(i);
+    }
+  }
+
+  #[test]
+  #[should_panic]
+  fn test_texturemap_get_texture_out_of_bounds() {
+    let mut ctx = init_sdl2_context();
+    let mut texture_store = load_some_textures(&mut ctx);
+    texture_store.get_texture(10); // Out of bounds
+  }
+
+  #[test]
+  fn test_texturemap_set_alpha() {
+    let mut ctx = init_sdl2_context();
+    let mut texture_store = load_some_textures(&mut ctx);
+    for i in 0..10 {
+      texture_store.set_alpha(i, u8::try_from(i*5).unwrap());
+    }
+  }
+
+  #[test]
+  #[should_panic]
+  fn test_texturemap_set_alpha_out_of_bounds() {
+    let mut ctx = init_sdl2_context();
+    let mut texture_store = load_some_textures(&mut ctx);
+    texture_store.set_alpha(10, 42); // Out of bounds
   }
 }
