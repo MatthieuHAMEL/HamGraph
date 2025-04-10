@@ -11,6 +11,14 @@ pub fn set_userdata_path<P: AsRef<Path>>(path: P) {
     .expect("Configuration path can only be set once");
 }
 
+use std::sync::Once;
+static SETUP_USERDATA: Once = Once::new();
+pub fn set_userdata_path_once<P: AsRef<Path>>(path: P) {
+  SETUP_USERDATA.call_once(|| {
+    set_userdata_path(path);
+  });
+}
+
 /// Gets the configuration path, or a default if it hasn't been set.
 pub(crate) fn get_userdata_path() -> &'static Path {
   USERDATA_PATH.get_or_init(|| {
@@ -25,6 +33,13 @@ pub fn set_install_path<P: AsRef<Path>>(path: P) {
   INSTALL_PATH
     .set(path.as_ref().to_path_buf())
     .expect("Configuration path can only be set once");
+}
+
+static SETUP_INSTALL: Once = Once::new();
+pub fn set_install_path_once<P: AsRef<Path>>(path: P) {
+  SETUP_INSTALL.call_once(|| {
+    set_install_path(path);
+  });
 }
 
 pub(crate) fn get_install_path() -> &'static Path {
@@ -62,7 +77,7 @@ pub fn get_logger_path() -> PathBuf {
 
 #[cfg(test)] // TODO use crate ctor ? simpler in test context. 
 pub fn setup_test_folder() {
-  set_install_path(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("test").join("data"))
+  set_install_path_once(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("test").join("data"))
 }
 
 /*

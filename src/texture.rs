@@ -69,13 +69,14 @@ impl<'a> TextureStore<'a> {
 
 /////////////////////////////////////////////
 
+// TODO - move to integration tests.
 #[cfg(test)]
 mod tests {
   use crate::init::init_sdl2;
 
   use super::*;
 
-  fn init_sdl2_context() -> TextureCreator<WindowContext>{
+  fn init_sdl2_context() -> TextureCreator<WindowContext> {
     infraglobals::setup_test_folder();
 
     let (_sdl_ctx, _img_ctx, _ttf_ctx, _video, _mixer_ctx, canvas) 
