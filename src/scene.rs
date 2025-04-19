@@ -18,9 +18,7 @@ pub trait Scene {
 
   // todo call update and render "at the same time"
   fn update(&mut self, _delta_time: f32, _action_bus: &mut ActionBus) {}
-  fn render(&self, _renderer: &mut sdl2::render::Canvas<Window>, _sprites: &mut SpriteStore) -> Result<(), String> {
-    Ok(())
-  }
+  fn render(&self, _renderer: &mut sdl2::render::Canvas<Window>, _sprites: &mut SpriteStore) {}
   fn is_modal(&self) -> bool { false }
   fn handle_action(&mut self, _action: &Action, _origin: Option<SceneID>, _action_bus: &mut ActionBus) -> bool { false }
   fn left_click_zone(&self) -> Option<Rect> { None }
@@ -151,7 +149,7 @@ impl SceneStack
   pub fn render_all(&self, renderer: &mut sdl2::render::Canvas<Window>, sprites: &mut SpriteStore) {
     for layer in &self.scenes_priv {
       for scene_priv in layer.iter() {
-        scene_priv.scene.render(renderer, sprites).unwrap();
+        scene_priv.scene.render(renderer, sprites);
       }
     }
   }

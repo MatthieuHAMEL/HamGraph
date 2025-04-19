@@ -35,10 +35,9 @@ impl Scene for TextScene {
     }));
   }
 
-  fn render(&self, renderer: &mut Canvas<Window>, sprites: &mut SpriteStore) -> Result<(), String> {
+  fn render(&self, renderer: &mut Canvas<Window>, sprites: &mut SpriteStore) {
     sprites.render(renderer, self.idx_text, self.pos.x, self.pos.y, None);
     // TODO [BUG] it appears that this can render something else than a text sprite ...
-    Ok(())
   }
 
   fn pos_changed(&mut self, pos: Rect) {
