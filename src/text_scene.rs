@@ -3,7 +3,7 @@ use crate::{action::Action, action_bus::ActionBus, hg::HamID, layout_manager::La
 
 pub struct TextScene {
   text: String, 
-  idx_text: usize, // The index of the to-be-created 
+  idx_text: usize, // The index of the to-be-created texture
   pos: Rect, 
   size: String // e.g. "big" or "42"
 }
