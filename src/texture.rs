@@ -69,7 +69,9 @@ impl<'a> TextureStore<'a> {
 
 /////////////////////////////////////////////
 
-// TODO - move to integration tests.
+// NB: Run with cargo nextest (1 test per process)
+// With "cargo test" I can only serialise in the same process
+// ... or put them in integration tests but it'll generate N exes...
 #[cfg(test)]
 mod tests {
   use crate::init::init_sdl2;
