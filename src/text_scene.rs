@@ -1,4 +1,5 @@
 use sdl2::rect::Rect;
+use tracing::debug;
 use crate::{action::Action, action_bus::ActionBus, hg::{HamID, Renderer}, layout_manager::Layout, scene::Scene};
 
 pub struct TextScene {
@@ -16,23 +17,18 @@ impl TextScene {
 
 impl Scene for TextScene {
   fn init(&mut self, action_bus: &mut ActionBus) {
-    println!("Initializing Text Scene.");
+    debug!(target: "hg::ttf", "Initializing Text Scene");
 
-    if let Some(HamID::SpriteID(sprid)) = action_bus.push(Action::CreateText{
-      font: "VcrOsdMono".to_owned(), 
+    let sprid = action_bus.push(Action::CreateText{
+      font: "VcrOsdMono".to_owned(), // TODO set a "default font"
       size: self.size.clone(), 
       text: self.text.clone(),
-    }) 
-    { // TODO set a "default font"
-      self.idx_text = sprid;
-      println!("ActionBus says my sprite will have the ID {}", self.idx_text);
-    } else {
-      panic!("Contract error [28] in text scene");
-    }
+    }).unwrap();
 
-    action_bus.push(Action::RequestLayout(Layout {
-      ..Default::default()
-    }));
+    self.idx_text = if let HamID::SpriteID(id) = sprid { id } else { unreachable!() };
+    debug!(target: "hg::ttf", "ActionBus says my sprite will have the ID {}", self.idx_text);
+
+    action_bus.push(Action::RequestLayout(Layout { ..Default::default() }));
   }
 
   fn render(&self, renderer: &mut Renderer) {

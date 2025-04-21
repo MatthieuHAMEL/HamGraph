@@ -14,6 +14,10 @@ pub enum HamID {
   SpriteID(usize)
 }
 
+const TRAINIT: &str = "hg::init";
+const TRASCENE: &str = "hg::scene";
+
+
 /** "Abstraction" of SDL2 for the user. */
 pub struct HamSdl2 {
   sdl_context: Sdl,
@@ -69,19 +73,17 @@ pub struct HamGraph<'a> {
   pub mixer_manager: MixerManager<'a>,
 }
   
-impl<'a> HamGraph<'a> 
-{
+impl<'a> HamGraph<'a> {
   pub fn new(hamsdl2: &'a mut HamSdl2, mut root_scene: Box<dyn Scene>) -> Self {
-      
     let sprite_store = SpriteStore::new(&mut hamsdl2.texture_creator);
 
-    info!(target: "hg::init", "Initializing HAMGRAPH...");
+    info!(target: TRAINIT, "Initializing HAMGRAPH...");
     
     let mut action_bus = ActionBus::new(sprite_store.shared_len());
     root_scene.init(&mut action_bus);
 
     let wdim = hamsdl2.canvas.window().size();
-    info!(target: "hg::init", "Window dimensions: {:?}", wdim);
+    info!(target: TRAINIT, "Window dimensions: {:?}", wdim);
     
     let layout_manager = LayoutManager::new(wdim);
 
@@ -109,7 +111,7 @@ impl<'a> HamGraph<'a>
     if self.scene_stack.get_scene(parent).is_some() {
       real_parent = parent;
     }
-    debug!(target: "hg::scene", "Registering id=<{}>, parent=<{}>", id, real_parent);
+    debug!(target: TRASCENE, "Registering id=<{}>, parent=<{}>", id, real_parent);
     self.scene_stack.push(layer, scene, real_parent); 
     self.action_bus.prepare(id, self.scene_stack.next_scene_id());
    // self.action_bus.next_sprite_id = self.sprite_store.size();
@@ -190,17 +192,11 @@ impl<'a> HamGraph<'a>
     let target_frame_duration = Duration::from_secs_f32(1.0 / 60.0); // Targeting 60 FPS
     let mut last_update = Instant::now(); 
 
-    'hamloop: loop 
-    {
-      // Debug temp todo 
-      //println!("At this frame: TaffyTree: {:#?}", print_tree(&self.layout_manager.taffy_tree, self.layout_manager.root_node_id));
-      //println!("[DEBUG] In Main Loop");
+    'hamloop: loop {
       // 1. HANDLE EVENTS
-      for event in event_pump.poll_iter() 
-      {
+      for event in event_pump.poll_iter() {
         let event_kind;
-        match event 
-        {
+        match event {
           Event::Quit {..} |
           Event::KeyDown { keycode: Some(Keycode::Escape), .. } => { break 'hamloop }, // LEGACY TODO 
             
@@ -272,9 +268,6 @@ impl<'a> HamGraph<'a>
       if frame_duration < target_frame_duration { // TODO not needed with VSYNC ?
         std::thread::sleep(target_frame_duration - frame_duration);
       } // else application is quite overwhelmed! ... 
-      else { // temp 
-        println!("HAMGRAPH is overwhelmed!"); // ?
-      }
     }
   }
 }

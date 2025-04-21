@@ -8,6 +8,7 @@ use sdl2::rect::Rect;
 use sdl2::render::{TextureCreator, WindowCanvas};
 use sdl2::surface::Surface;
 use sdl2::video::WindowContext;
+use tracing::debug;
 use std::cell::Cell;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -40,7 +41,7 @@ impl<'a> SpriteStore<'a>
     for jsheet in v_jsheets { // 1 sheet == 1 texture == N sprites
       let tex_id = texture_store.push_new_texture(jsheet.file, None);
       for js in jsheet.sprites { // js is the json representation of a sprite
-        println!("Sprite {} made alone ? {:?}",js.name, js.make_alone);
+        debug!(target: "hg::sprite", "Sprite {} made alone ? {:?}", js.name, js.make_alone);
         store.push(Sprite::new(Rect::new(js.x, js.y, js.w, js.h), tex_id));
       }
     }
@@ -58,9 +59,7 @@ impl<'a> SpriteStore<'a>
       self.texture_store.set_alpha(sprite.texture_id, alph);
     } 
     let tex = self.texture_store.get_texture(sprite.texture_id) ;
-
     let dest_rect = Rect::new(x, y, sprite.src_rect.width(), sprite.src_rect.height());
-    
     canvas.copy(tex, sprite.src_rect, dest_rect).unwrap();
   }
 
@@ -77,14 +76,22 @@ impl<'a> SpriteStore<'a>
 
     let w = self.cached_text.as_ref().unwrap().width();
     let h = self.cached_text.as_ref().unwrap().height();
+
+    debug!(target: "hg::sprite", "try_ttf_texture w=<{}>, h=<{}>", w, h);
     (w, h)
   }
 
   pub fn commit_ttf_texture(&mut self) -> usize {
-    let tex_id = self.texture_store.push_new_texture("".to_owned(), self.cached_text.take());
-    self.store.push(Sprite::new(Rect::new(0, 0, self.cached_text.as_ref().unwrap().width(), self.cached_text.as_ref().unwrap().height()), tex_id));
-    self.current_len.set(self.current_len.get() + 1);
-    tex_id
+    if let Some(cached_text) = self.cached_text.as_ref() {
+      let width = cached_text.width();
+      let height = cached_text.height();
+      let tex_id = self.texture_store.push_new_texture("".to_owned(), self.cached_text.take());
+      self.store.push(Sprite::new(Rect::new(0, 0, width, height), tex_id));
+      self.current_len.set(self.current_len.get() + 1);
+      return tex_id;
+    } else {
+      prompt_err_and_panic("commit_ttf_texture failed: cached_text is None", "", None);
+    }
   }
 }
 

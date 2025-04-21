@@ -1,7 +1,13 @@
+use std::env;
+
 use sdl2::rect::Rect;
-use taffy::{prelude::{length, percent, TaffyMaxContent}, Dimension, FlexDirection, FlexWrap, NodeId, Size, Style, TaffyTree};
+use taffy::{prelude::{length, percent, TaffyMaxContent}, print_tree, Dimension, FlexDirection, FlexWrap, NodeId, Size, Style, TaffyTree};
+use tracing::debug;
 
 use crate::scene::{SceneID, SceneStack};
+
+use std::sync::LazyLock;
+static LOG_PRINTTREE: LazyLock<bool> = LazyLock::new(|| env::var("HAMGRAPH_PRINTTREE").is_ok());
 
 // This module is an abstraction over the taffy layout.
 
@@ -154,7 +160,12 @@ impl LayoutManager {
   pub fn update_layout(&mut self) -> bool {
     if self.taffy_tree.dirty(self.root_node_id).unwrap() {
       self.taffy_tree.compute_layout(self.root_node_id, Size::MAX_CONTENT).unwrap();
-      return true;
+      debug!(target: "hg::layout", "Taffy tree updated");
+
+      if *LOG_PRINTTREE {
+        print_tree(&self.taffy_tree, self.root_node_id); // taffy does not have a print tree to a file .. 
+      }
+      return true;      
     }
     false
   }

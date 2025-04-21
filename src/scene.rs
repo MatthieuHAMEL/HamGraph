@@ -13,6 +13,8 @@ pub type SceneID = u64;
 // avoid a linear search all the time
 // use a little map while the scenestack is not dirtified ... 
 
+const TRASCENE: &str = "hg::scene";
+
 pub trait Scene {
   fn init(&mut self, _action_bus: &mut ActionBus) {}
 
