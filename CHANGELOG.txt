@@ -66,6 +66,14 @@ SceneStack is a collection of layers, every layer being a collection of scenes.
 - Simplified the next_scene_id wrt the Bus (better synchronization...)
 - Beginning of SceneStack unit testing.
 
+----- v0.11 (21/04/25) -----
+- More complete unit testing of SceneStack, 
+- Unit tests for Texture
+  - Test protocol : using cargo nextest for 1-per-process
+- Recipe for test coverage with llvm_cov,
+- Simplified ActionKind -> EventKind
+- Simplified Scene trait, no Result to render, abstracted renderer object
+
 ------------------------------------------------------
 
 Quick TODOLIST for next days :
