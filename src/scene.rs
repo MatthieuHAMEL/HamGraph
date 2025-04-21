@@ -39,6 +39,18 @@ impl ScenePriv {
   pub fn new(id: SceneID, parent: SceneID, scene: Box<dyn Scene>) -> Self {
     Self { id, taffy_id: None, parent, children: vec![], scene }  
   }
+
+  pub fn get_id(&self) -> SceneID {
+    self.id
+  }
+
+  pub fn get_parent_id(&self) -> SceneID {
+    self.parent
+  }
+
+  pub fn get_nodeid(&self) -> Option<NodeId> {
+    self.taffy_id
+  }
 }
 
 // TODO this will change (why having a max layer depth ?)
@@ -234,6 +246,7 @@ impl SceneStack
     }
     None
   }
+
    // todo optimise with indexes 
   pub(crate) fn nodeid(&mut self, id: SceneID) -> Option<NodeId> {
     if let Some(scene_p) = self.get_scene(id) {
@@ -247,6 +260,18 @@ impl SceneStack
 
   pub(crate) fn set_nodeid(&mut self, id: SceneID, node_id: NodeId) {
     self.get_scene(id).unwrap().taffy_id = Some(node_id);
+  }
+
+  pub(crate) fn get_first_with_layout(&mut self, id: SceneID) -> (SceneID, NodeId) {
+    let mut current_id = id;
+    while let Some(scene) = self.get_scene(current_id) {
+      if scene.taffy_id.is_some() {
+        return (current_id, scene.get_nodeid().unwrap());
+      }
+      current_id = scene.parent;
+    }
+
+    (0, NodeId::new(0)) // Default to root scene if no layout is found
   }
 
   pub(crate) fn parent(&mut self, id: SceneID) -> SceneID {

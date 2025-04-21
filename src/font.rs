@@ -11,8 +11,8 @@ impl<'a> FontStore<'a> {
     Self { fonts: HashMap::new() }
   }
 
-  pub fn get(&'a self, name: String) -> &'a Font<'a, 'static> {
-    self.fonts.get(&name).unwrap_or_else(|| {
+  pub fn get(&'a self, name: &str) -> &'a Font<'a, 'static> {
+    self.fonts.get(name).unwrap_or_else(|| {
       panic!("{}", format!("No such font !... {}", &name))
     })
   }

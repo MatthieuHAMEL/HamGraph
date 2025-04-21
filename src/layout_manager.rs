@@ -210,4 +210,8 @@ impl LayoutManager {
         },
     ).unwrap();
   }
+
+  pub fn get_style(&self, node_id: NodeId) -> &Style {
+    self.taffy_tree.style(node_id).unwrap()
+  }
 }

@@ -128,8 +128,28 @@ impl<'a> HamGraph<'a>
         // If not "detached mode" -- TODO :
       },    
       Action::CreateText { font, size, text } => {
-        self.renderer.sprite_store.create_ttf_texture(&self.renderer.font_store, font + "_" + &size, text);
-        // TODO MATOU 
+        self.layout_manager.update_layout(); 
+        let (_id_layout, nodeid_layout) = self.scene_stack.get_first_with_layout(action_p.source_scene);
+        let style = self.layout_manager.get_style(nodeid_layout);
+
+        let max_size = style.max_size;
+        let max_width = if let taffy::style::Dimension::Length(width) = max_size.width {
+            width as u32
+        } else {
+            0 // ... TODO 
+        };
+        
+        
+        let fontfont = font + "_" + &size;
+        let (w, h) = self.renderer.sprite_store.try_ttf_texture(
+            &self.renderer.font_store,
+            &fontfont,
+            text,
+            max_width,
+          );
+        
+
+        self.renderer.sprite_store.commit_ttf_texture();
       },                          
       Action::CloseCurrentScene => {
         // Remove from layout if applicable 

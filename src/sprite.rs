@@ -68,10 +68,11 @@ impl<'a> SpriteStore<'a>
     Rc::clone(&self.current_len)
   }
 
-  pub fn try_ttf_texture(&mut self, font_store: &FontStore, font_name: String, text: String, max_width: u32) -> (u32, u32) {
+  pub fn try_ttf_texture(&mut self, font_store: &FontStore, font_name: &str, text: String, max_width: u32) -> (u32, u32) {
     let font = font_store.get(font_name); 
       
     // Render text to a surface, and convert surface to a texture
+    // TODO 
     self.cached_text = Some(font.render(&text).blended(Color::RGB(0, 0, 50)).unwrap());// TODO color custo 
 
     let w = self.cached_text.as_ref().unwrap().width();
@@ -79,7 +80,7 @@ impl<'a> SpriteStore<'a>
     (w, h)
   }
 
-  pub fn create_ttf_texture(&mut self, font_store: &FontStore, font_name: String, text: String) -> usize {
+  pub fn commit_ttf_texture(&mut self) -> usize {
     let tex_id = self.texture_store.push_new_texture("".to_owned(), self.cached_text.take());
     self.store.push(Sprite::new(Rect::new(0, 0, self.cached_text.as_ref().unwrap().width(), self.cached_text.as_ref().unwrap().height()), tex_id));
     self.current_len.set(self.current_len.get() + 1);

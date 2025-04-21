@@ -35,6 +35,13 @@ pub(crate) fn init_sdl2(
 
   panic::set_hook(Box::new(|panic_info| 
     {
+      let location = if let Some(loc) = panic_info.location() {
+        format!(
+          "Panic occurred in file '{}' at line {}",loc.file(),loc.line()  )
+        } else {
+          "Panic location unknown".to_string()
+        };
+
       // Extract the panic message (if present)
       let msg = match panic_info.payload().downcast_ref::<&str>() {
         Some(s) => *s,
@@ -44,7 +51,8 @@ pub(crate) fn init_sdl2(
         },
       };
     
-      prompt_err(msg, None);
+      let full_msg = format!("{}\n{}", location, msg);
+      prompt_err(&full_msg, None);
       // the panic still goes on after this function returns.
     }));
 
