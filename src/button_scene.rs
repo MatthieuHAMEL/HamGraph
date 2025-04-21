@@ -1,6 +1,6 @@
 // Temporary placed here. To be part of HamUI. 
-use crate::{action::{Action, EventKind}, action_bus::ActionBus, layout_manager::Layout, scene::{Scene, SceneID}, sprite::SpriteStore, text_scene::TextScene, utils::is_point_in_rect};
-use sdl2::{event::Event, mouse::MouseButton, pixels::Color, rect::Rect, video::Window};
+use crate::{action::{Action, EventKind}, action_bus::ActionBus, hg::Renderer, layout_manager::Layout, scene::{Scene, SceneID}, text_scene::TextScene, utils::is_point_in_rect};
+use sdl2::{event::Event, mouse::MouseButton, pixels::Color, rect::Rect};
 use tracing::debug;
 
 pub struct ButtonScene {
@@ -24,15 +24,15 @@ impl Scene for ButtonScene {
     bus.push(Action::CreateScene { scene: Box::new(TextScene::new(self.lil_name.clone(), "big".to_owned())), layer: 4 /*URGENT TODO  */ });
   }
 
-  fn render(&self, renderer: &mut sdl2::render::Canvas<Window>, _sprites: &mut SpriteStore) {
+  fn render(&self, renderer: &mut Renderer) {
     if self.pos.is_none() { return; }
     if self.pressed {
-      renderer.set_draw_color(Color::RGB(0, 100, 255));
+      renderer.canvas.set_draw_color(Color::RGB(0, 100, 255));
     }
     else {
-      renderer.set_draw_color(self.color_tmp);
+      renderer.canvas.set_draw_color(self.color_tmp);
     }
-    renderer.fill_rect(self.pos).map_err(|e| e.to_string()).unwrap(); 
+    renderer.canvas.fill_rect(self.pos).map_err(|e| e.to_string()).unwrap(); 
   }
 
   fn left_click_zone(&self) -> Option<Rect> {

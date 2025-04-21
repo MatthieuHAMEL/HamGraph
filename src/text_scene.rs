@@ -1,5 +1,5 @@
-use sdl2::{rect::Rect, render::Canvas, video::Window};
-use crate::{action::Action, action_bus::ActionBus, hg::HamID, layout_manager::Layout, scene::Scene, sprite::SpriteStore};
+use sdl2::rect::Rect;
+use crate::{action::Action, action_bus::ActionBus, hg::{HamID, Renderer}, layout_manager::Layout, scene::Scene};
 
 pub struct TextScene {
   text: String, 
@@ -35,8 +35,8 @@ impl Scene for TextScene {
     }));
   }
 
-  fn render(&self, renderer: &mut Canvas<Window>, sprites: &mut SpriteStore) {
-    sprites.render(renderer, self.idx_text, self.pos.x, self.pos.y, None);
+  fn render(&self, renderer: &mut Renderer) {
+    renderer.render_sprite(self.idx_text, self.pos.x, self.pos.y, None);
     // TODO [BUG] it appears that this can render something else than a text sprite ...
   }
 

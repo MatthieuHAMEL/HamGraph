@@ -39,14 +39,31 @@ impl HamSdl2 {
   }
 }
 
-// For now (TODO) everything is pub -- I'll see later...
-pub struct HamGraph<'a> {
-  pub sprite_store: SpriteStore<'a>,
+pub struct Renderer<'a> {
   pub sdl_context: &'a Sdl,
   pub canvas: &'a mut Canvas<Window>,
+  pub sprite_store: SpriteStore<'a>,
+  pub font_store: FontStore<'a>,
+}
+
+impl<'a> Renderer<'a> {
+  pub fn new(sdl_context: &'a Sdl, canvas: &'a mut Canvas<Window>, sprite_store: SpriteStore<'a>, font_store: FontStore<'a>) -> Self {
+    Self {sdl_context, canvas, sprite_store, font_store}
+  }
+
+  pub fn render(&self) {
+  }
+
+  pub fn render_sprite(&mut self, sprite_id: usize, pos_x: i32, pos_y: i32, alpha: Option<u8>) {
+    self.sprite_store.render(self.canvas, sprite_id, pos_x, pos_y, alpha);
+  }
+}
+
+// For now (TODO) everything is pub -- I'll see later...
+pub struct HamGraph<'a> {
+  pub renderer: Renderer<'a>,
   pub scene_stack: SceneStack,
   pub action_bus: ActionBus, // TODO not pub !
-  pub font_store: FontStore<'a>,
   pub(crate) layout_manager: LayoutManager,
   pub window_dim: (u32, u32),
   pub mixer_manager: MixerManager<'a>,
@@ -70,18 +87,15 @@ impl<'a> HamGraph<'a>
 
     let mut font_store = FontStore::new();
     let scene_stack = SceneStack::new(root_scene, layout_manager.root_node_id);
-    // To do, this should of course be multiplied by the UI scale. 
-    font_store.load_from_folder(&hamsdl2.ttf_context,  &infraglobals::get_ttf_path(), 12u16, "small");
-    font_store.load_from_folder(&hamsdl2.ttf_context,  &infraglobals::get_ttf_path(), 20u16, "medium");
-    font_store.load_from_folder(&hamsdl2.ttf_context,  &infraglobals::get_ttf_path(), 30u16, "big");
- 
+    
+    // Todo : this should of course be multiplied by the UI scale. 
+    font_store.load_default_sized_fonts(&hamsdl2.ttf_context, &infraglobals::get_ttf_path());
+    
+    let renderer = Renderer::new(&hamsdl2.sdl_context, &mut hamsdl2.canvas, sprite_store, font_store);
     Self {
-      sprite_store,
-      canvas: &mut hamsdl2.canvas,
-      sdl_context: &hamsdl2.sdl_context,
+      renderer,
       scene_stack, 
       action_bus, 
-      font_store, 
       layout_manager, 
       window_dim: hamsdl2.window_dim, 
       mixer_manager: MixerManager::new()
@@ -114,7 +128,7 @@ impl<'a> HamGraph<'a>
         // If not "detached mode" -- TODO :
       },    
       Action::CreateText { font, size, text } => {
-        self.sprite_store.create_ttf_texture(&self.font_store, font + "_" + &size, text);
+        self.renderer.sprite_store.create_ttf_texture(&self.renderer.font_store, font + "_" + &size, text);
         // TODO MATOU 
       },                          
       Action::CloseCurrentScene => {
@@ -149,7 +163,7 @@ impl<'a> HamGraph<'a>
 
   pub fn run_main_loop(&mut self)  // TODO interface
   {
-    let mut event_pump = self.sdl_context.event_pump().unwrap_or_else(|e| {
+    let mut event_pump = self.renderer.sdl_context.event_pump().unwrap_or_else(|e| {
       crate::errors::prompt_err_and_panic("SDL initialization error, no event pump", &e, None);
     });
   
@@ -225,13 +239,13 @@ impl<'a> HamGraph<'a>
       }
 
       // 4. DRAW
-      self.canvas.set_draw_color(Color::RGB(0, 0, 0));
-      self.canvas.clear();
+      self.renderer.canvas.set_draw_color(Color::RGB(0, 0, 0));
+      self.renderer.canvas.clear();
       
-      self.scene_stack.render_all(self.canvas, &mut self.sprite_store);
+      self.scene_stack.render_all(&mut self.renderer);
 
       // 5. UPDATE SCREEN
-      self.canvas.present();
+      self.renderer.canvas.present();
 
       // Maintain a consistent frame rate
       let frame_duration = now.elapsed();

@@ -1,8 +1,8 @@
 use std::collections::HashSet;
-use sdl2::{event::Event, rect::Rect, video::Window};
+use sdl2::{event::Event, rect::Rect};
 use taffy::NodeId;
 use tracing::{debug, warn};
-use crate::{action::{Action, EventKind}, action_bus::{ActionBus, ActionPriv}, layout_manager::LayoutManager, sprite::SpriteStore, utils::is_point_in_rect};
+use crate::{action::{Action, EventKind}, action_bus::{ActionBus, ActionPriv}, hg::Renderer, layout_manager::LayoutManager, utils::is_point_in_rect};
 
 // Unique identifier for each scene.
 pub type SceneID = u64;
@@ -18,7 +18,7 @@ pub trait Scene {
 
   // todo call update and render "at the same time"
   fn update(&mut self, _delta_time: f32, _action_bus: &mut ActionBus) {}
-  fn render(&self, _renderer: &mut sdl2::render::Canvas<Window>, _sprites: &mut SpriteStore) {}
+  fn render(&self, _renderer: &mut Renderer) {}
   fn is_modal(&self) -> bool { false }
   fn handle_action(&mut self, _action: &Action, _origin: Option<SceneID>, _action_bus: &mut ActionBus) -> bool { false }
   fn left_click_zone(&self) -> Option<Rect> { None }
@@ -146,10 +146,10 @@ impl SceneStack
   }
 
   // Paint the scenes from the lowest to the highest in the stack
-  pub fn render_all(&self, renderer: &mut sdl2::render::Canvas<Window>, sprites: &mut SpriteStore) {
+  pub fn render_all(&self, renderer: &mut Renderer) {
     for layer in &self.scenes_priv {
       for scene_priv in layer.iter() {
-        scene_priv.scene.render(renderer, sprites);
+        scene_priv.scene.render(renderer);
       }
     }
   }
