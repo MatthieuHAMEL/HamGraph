@@ -6,6 +6,7 @@ use crate::infraglobals;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::{TextureCreator, WindowCanvas};
+use sdl2::surface::Surface;
 use sdl2::video::WindowContext;
 use std::cell::Cell;
 use std::path::PathBuf;
@@ -15,7 +16,9 @@ pub struct SpriteStore<'a>
 {
   store: Vec<Sprite>,
   current_len: Rc<Cell<usize>>,
-  texture_store: TextureStore<'a>
+  texture_store: TextureStore<'a>,
+
+  cached_text: Option<Surface<'a>>
 }
 
 impl<'a> SpriteStore<'a>
@@ -42,7 +45,7 @@ impl<'a> SpriteStore<'a>
       }
     }
     let cur_len: usize = store.len();
-    SpriteStore { store, current_len: Rc::new(Cell::new(cur_len)), texture_store }
+    SpriteStore { store, current_len: Rc::new(Cell::new(cur_len)), texture_store, cached_text: None }
   }
 
   pub fn render(&mut self, canvas: &mut WindowCanvas, sprite_id: usize, x: i32, y: i32, alpha: Option<u8>) {
@@ -65,15 +68,20 @@ impl<'a> SpriteStore<'a>
     Rc::clone(&self.current_len)
   }
 
-  pub fn create_ttf_texture(&mut self, font_store: &FontStore, font_name: String, text: String) -> usize {
+  pub fn try_ttf_texture(&mut self, font_store: &FontStore, font_name: String, text: String, max_width: u32) -> (u32, u32) {
     let font = font_store.get(font_name); 
-    
+      
     // Render text to a surface, and convert surface to a texture
-    let surface = font.render(&text).blended(Color::RGB(0, 0, 50)).unwrap() ;// TODO color custo 
-    let (w, h) = (surface.width(), surface.height());
+    self.cached_text = Some(font.render(&text).blended(Color::RGB(0, 0, 50)).unwrap());// TODO color custo 
 
-    let tex_id = self.texture_store.push_new_texture("".to_owned(), Some(surface));
-    self.store.push(Sprite::new(Rect::new(0, 0, w, h), tex_id));
+    let w = self.cached_text.as_ref().unwrap().width();
+    let h = self.cached_text.as_ref().unwrap().height();
+    (w, h)
+  }
+
+  pub fn create_ttf_texture(&mut self, font_store: &FontStore, font_name: String, text: String) -> usize {
+    let tex_id = self.texture_store.push_new_texture("".to_owned(), self.cached_text.take());
+    self.store.push(Sprite::new(Rect::new(0, 0, self.cached_text.as_ref().unwrap().width(), self.cached_text.as_ref().unwrap().height()), tex_id));
     self.current_len.set(self.current_len.get() + 1);
     tex_id
   }
