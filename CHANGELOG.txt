@@ -74,6 +74,11 @@ SceneStack is a collection of layers, every layer being a collection of scenes.
 - Simplified ActionKind -> EventKind
 - Simplified Scene trait, no Result to render, abstracted renderer object
 
+----- v0.12 (??/04/25) -----
+- TTF layout based on the taffy tree, automatic 
+reloading of the TTF texture if layout changes (TODO)
+- Added more traces and a logging guide
+
 ------------------------------------------------------
 
 Quick TODOLIST for next days :

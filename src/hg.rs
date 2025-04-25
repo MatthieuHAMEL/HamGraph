@@ -141,7 +141,9 @@ impl<'a> HamGraph<'a> {
             0 // ... TODO 
         };
         
-        
+        // TODO : get max size of the parent container of the text 
+        // Adapt the text to that max width 
+        // how to adapt to max height ? Not so easy. See EGUI efforts instead.
         let fontfont = font + "_" + &size;
         let (w, h) = self.renderer.sprite_store.try_ttf_texture(
             &self.renderer.font_store,
@@ -149,7 +151,6 @@ impl<'a> HamGraph<'a> {
             text,
             max_width,
           );
-        
 
         self.renderer.sprite_store.commit_ttf_texture();
       },                          

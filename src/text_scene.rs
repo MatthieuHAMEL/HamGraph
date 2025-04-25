@@ -37,6 +37,7 @@ impl Scene for TextScene {
   }
 
   fn pos_changed(&mut self, pos: Rect) {
+    debug!(target: "hg::ttf", "pos_changed {:?}", pos);
     self.pos = pos;   
   }
 }
