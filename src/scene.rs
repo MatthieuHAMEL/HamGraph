@@ -255,7 +255,7 @@ impl SceneStack
       scene_p.taffy_id
     }
     else {
-      warn!(target: "hg::scene", "Warning! No scene found for id {}", id);
+      warn!(target: TRASCENE, "Warning! No scene found for id {}", id);
       None
     }
   }
@@ -281,7 +281,7 @@ impl SceneStack
   }
 
   pub(crate) fn update_layout(&mut self, layout_mgr: &LayoutManager) {
-    // if nobody subscribed to that event, just return (TODO)
+    // if nobody subscribed to that event, just return (TODO optimization)
     // cf subscription system.
     // Starting from the top layer to the bottom (reverse order)
     for layer_index in (0..self.scenes_priv.len()).rev() 

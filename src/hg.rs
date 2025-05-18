@@ -1,5 +1,6 @@
 use std::time::{Duration, Instant};
 
+use egui_sdl2_canvas::Painter;
 use sdl2::{event::{Event, WindowEvent}, image::Sdl2ImageContext, keyboard::Keycode, mixer::Sdl2MixerContext, mouse::MouseButton, pixels::Color, render::{Canvas, TextureCreator}, ttf::Sdl2TtfContext, video::{Window, WindowContext}, Sdl, VideoSubsystem};
 use tracing::{debug, info, warn};
 //use taffy::print_tree;
@@ -45,21 +46,26 @@ impl HamSdl2 {
 
 pub struct Renderer<'a> {
   pub sdl_context: &'a Sdl,
+  pub sdl_video: &'a VideoSubsystem,
   pub canvas: &'a mut Canvas<Window>,
   pub sprite_store: SpriteStore<'a>,
   pub font_store: FontStore<'a>,
+  pub egui_painter: Painter<'a>,
 }
 
 impl<'a> Renderer<'a> {
-  pub fn new(sdl_context: &'a Sdl, canvas: &'a mut Canvas<Window>, sprite_store: SpriteStore<'a>, font_store: FontStore<'a>) -> Self {
-    Self {sdl_context, canvas, sprite_store, font_store}
+  pub fn new(sdl_context: &'a Sdl, sdl_video: &'a VideoSubsystem, canvas: &'a mut Canvas<Window>, sprite_store: SpriteStore<'a>, font_store: FontStore<'a>) -> Self {
+    Self {sdl_context, sdl_video, canvas, sprite_store, font_store, egui_painter: Painter::new()}
   }
 
-  pub fn render(&self) {
+  pub fn render(&self) { // ? TODO (abstraction over fill_rect, set_render_draw_color ...)
   }
 
   pub fn render_sprite(&mut self, sprite_id: usize, pos_x: i32, pos_y: i32, alpha: Option<u8>) {
     self.sprite_store.render(self.canvas, sprite_id, pos_x, pos_y, alpha);
+  }
+
+  pub fn render_gui(&mut self) {
   }
 }
 
@@ -93,7 +99,7 @@ impl<'a> HamGraph<'a> {
     // Todo : this should of course be multiplied by the UI scale. 
     font_store.load_default_sized_fonts(&hamsdl2.ttf_context, &infraglobals::get_ttf_path());
     
-    let renderer = Renderer::new(&hamsdl2.sdl_context, &mut hamsdl2.canvas, sprite_store, font_store);
+    let renderer = Renderer::new(&hamsdl2.sdl_context, &hamsdl2._video_subsystem, &mut hamsdl2.canvas, sprite_store, font_store);
     Self {
       renderer,
       scene_stack, 
@@ -136,9 +142,9 @@ impl<'a> HamGraph<'a> {
 
         let max_size = style.max_size;
         let max_width = if let taffy::style::Dimension::Length(width) = max_size.width {
-            width as u32
+          width as u32
         } else {
-            0 // ... TODO 
+          0 // ... TODO 
         };
         
         // TODO : get max size of the parent container of the text 
@@ -146,11 +152,11 @@ impl<'a> HamGraph<'a> {
         // how to adapt to max height ? Not so easy. See EGUI efforts instead.
         let fontfont = font + "_" + &size;
         let (w, h) = self.renderer.sprite_store.try_ttf_texture(
-            &self.renderer.font_store,
-            &fontfont,
-            text,
-            max_width,
-          );
+          &self.renderer.font_store,
+          &fontfont,
+          text,
+          max_width,
+        );
 
         self.renderer.sprite_store.commit_ttf_texture();
       },                          
@@ -184,7 +190,7 @@ impl<'a> HamGraph<'a> {
     }
   }
 
-  pub fn run_main_loop(&mut self)  // TODO interface
+  pub fn run_main_loop(&mut self)
   {
     let mut event_pump = self.renderer.sdl_context.event_pump().unwrap_or_else(|e| {
       crate::errors::prompt_err_and_panic("SDL initialization error, no event pump", &e, None);
@@ -192,6 +198,9 @@ impl<'a> HamGraph<'a> {
   
     let target_frame_duration = Duration::from_secs_f32(1.0 / 60.0); // Targeting 60 FPS
     let mut last_update = Instant::now(); 
+
+    // TEMP MATOU
+    let mut platform = egui_sdl2_platform::Platform::new(self.window_dim).unwrap();
 
     'hamloop: loop {
       // 1. HANDLE EVENTS
@@ -213,6 +222,9 @@ impl<'a> HamGraph<'a> {
           }
           _ => { continue; /* Nothing for now */ }
         }
+        // Propagate to egui 
+        platform.handle_event(&event, &self.renderer.sdl_context, &self.renderer.sdl_video);
+
         // Here we really want to propagate the event e.g. MouseButtonDown
         let action = Action::SdlEvent(event);
         self.scene_stack.propagate_sdl2_to_subscribers(&mut self.action_bus, action, event_kind);
@@ -232,7 +244,7 @@ impl<'a> HamGraph<'a> {
       }
 
       // 3. UPDATE GAME LOGIC
-      let now = Instant::now();
+      let now = Instant::now(); // todo ... where should it be?
       let delta_time = now.duration_since(last_update).as_secs_f32();
       last_update = now;
       self.scene_stack.update_all(delta_time, &mut self.action_bus);
