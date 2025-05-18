@@ -12,7 +12,7 @@ pub struct TextureStore<'a> {
 }
 
 impl<'a> TextureStore<'a> {
-  pub fn new(texture_creator: &'a mut TextureCreator<WindowContext>, 
+  pub fn new(texture_creator: &'a TextureCreator<WindowContext>, 
              initial_texture_count: usize) -> TextureStore<'a> {
     TextureStore { 
       textures: Vec::with_capacity(initial_texture_count), 

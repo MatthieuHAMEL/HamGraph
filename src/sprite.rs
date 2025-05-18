@@ -25,7 +25,7 @@ pub struct SpriteStore<'a>
 impl<'a> SpriteStore<'a>
 {
   // Loads the store from JSON files at the start of the game (without loading textures)
-  pub fn new(texture_creator: &'a mut TextureCreator<WindowContext>) -> Self 
+  pub fn new(texture_creator: &'a TextureCreator<WindowContext>) -> Self 
   {
     let json_path = infraglobals::get_conf_path().join("spritedesc.json");
     if !json_path.exists() {

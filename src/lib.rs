@@ -10,6 +10,7 @@ pub mod action_bus;
 pub mod mixer_manager;
 pub mod layout_manager;
 pub mod font;
+pub mod renderer;
 
 
 pub mod button_scene; // temporary (TODO)
@@ -18,6 +19,7 @@ pub mod text_scene;
 
 pub use hg::HamGraph;
 pub use hg::HamSdl2;
+pub use renderer::Renderer;
 
 mod utils;
 mod logger;

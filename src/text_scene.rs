@@ -1,6 +1,6 @@
 use sdl2::rect::Rect;
 use tracing::debug;
-use crate::{action::Action, action_bus::ActionBus, hg::{HamID, Renderer}, layout_manager::Layout, scene::Scene};
+use crate::{Renderer, action::Action, action_bus::ActionBus, hg::HamID, layout_manager::Layout, scene::Scene};
 
 pub struct TextScene {
   text: String, 

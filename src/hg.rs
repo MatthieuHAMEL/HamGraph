@@ -1,10 +1,9 @@
 use std::time::{Duration, Instant};
 
-use egui_sdl2_canvas::Painter;
 use sdl2::{event::{Event, WindowEvent}, image::Sdl2ImageContext, keyboard::Keycode, mixer::Sdl2MixerContext, mouse::MouseButton, pixels::Color, render::{Canvas, TextureCreator}, ttf::Sdl2TtfContext, video::{Window, WindowContext}, Sdl, VideoSubsystem};
 use tracing::{debug, info, warn};
 //use taffy::print_tree;
-use crate::{action::{Action, EventKind}, action_bus::{ActionBus, ActionPriv}, font::FontStore, infraglobals, init, layout_manager::LayoutManager, mixer_manager::MixerManager, scene::{Scene, SceneID, SceneStack}, sprite::SpriteStore};
+use crate::{action::{Action, EventKind}, action_bus::{ActionBus, ActionPriv}, font::FontStore, infraglobals, init, layout_manager::LayoutManager, mixer_manager::MixerManager, scene::{Scene, SceneID, SceneStack}, sprite::SpriteStore, Renderer};
 
 pub use crate::infraglobals::set_install_path;
 pub use crate::infraglobals::set_userdata_path;
@@ -44,30 +43,6 @@ impl HamSdl2 {
   }
 }
 
-pub struct Renderer<'a> {
-  pub sdl_context: &'a Sdl,
-  pub sdl_video: &'a VideoSubsystem,
-  pub canvas: &'a mut Canvas<Window>,
-  pub sprite_store: SpriteStore<'a>,
-  pub font_store: FontStore<'a>,
-  pub egui_painter: Painter<'a>,
-}
-
-impl<'a> Renderer<'a> {
-  pub fn new(sdl_context: &'a Sdl, sdl_video: &'a VideoSubsystem, canvas: &'a mut Canvas<Window>, sprite_store: SpriteStore<'a>, font_store: FontStore<'a>) -> Self {
-    Self {sdl_context, sdl_video, canvas, sprite_store, font_store, egui_painter: Painter::new()}
-  }
-
-  pub fn render(&self) { // ? TODO (abstraction over fill_rect, set_render_draw_color ...)
-  }
-
-  pub fn render_sprite(&mut self, sprite_id: usize, pos_x: i32, pos_y: i32, alpha: Option<u8>) {
-    self.sprite_store.render(self.canvas, sprite_id, pos_x, pos_y, alpha);
-  }
-
-  pub fn render_gui(&mut self) {
-  }
-}
 
 // For now (TODO) everything is pub -- I'll see later...
 pub struct HamGraph<'a> {
@@ -81,7 +56,7 @@ pub struct HamGraph<'a> {
   
 impl<'a> HamGraph<'a> {
   pub fn new(hamsdl2: &'a mut HamSdl2, mut root_scene: Box<dyn Scene>) -> Self {
-    let sprite_store = SpriteStore::new(&mut hamsdl2.texture_creator);
+    let sprite_store = SpriteStore::new(&hamsdl2.texture_creator);
 
     info!(target: TRAINIT, "Initializing HAMGRAPH...");
     
@@ -99,7 +74,7 @@ impl<'a> HamGraph<'a> {
     // Todo : this should of course be multiplied by the UI scale. 
     font_store.load_default_sized_fonts(&hamsdl2.ttf_context, &infraglobals::get_ttf_path());
     
-    let renderer = Renderer::new(&hamsdl2.sdl_context, &hamsdl2._video_subsystem, &mut hamsdl2.canvas, sprite_store, font_store);
+    let renderer = Renderer::new(&hamsdl2.sdl_context, &mut hamsdl2._video_subsystem, &mut hamsdl2.canvas, sprite_store, font_store, &hamsdl2.texture_creator);
     Self {
       renderer,
       scene_stack, 
@@ -199,10 +174,9 @@ impl<'a> HamGraph<'a> {
     let target_frame_duration = Duration::from_secs_f32(1.0 / 60.0); // Targeting 60 FPS
     let mut last_update = Instant::now(); 
 
-    // TEMP MATOU
-    let mut platform = egui_sdl2_platform::Platform::new(self.window_dim).unwrap();
-
     'hamloop: loop {
+      let mut v_sdl_events : Vec<(Action, EventKind)> = Vec::new();
+      
       // 1. HANDLE EVENTS
       for event in event_pump.poll_iter() {
         let event_kind;
@@ -223,10 +197,18 @@ impl<'a> HamGraph<'a> {
           _ => { continue; /* Nothing for now */ }
         }
         // Propagate to egui 
-        platform.handle_event(&event, &self.renderer.sdl_context, &self.renderer.sdl_video);
+        self.renderer.egui_platform.handle_event(&event, &self.renderer.sdl_context, &self.renderer.sdl_video);
 
         // Here we really want to propagate the event e.g. MouseButtonDown
         let action = Action::SdlEvent(event);
+        v_sdl_events.push((action, event_kind));
+      }
+
+      // Begin "User Callback Zone"
+      self.renderer.begin_egui_pass();
+
+      // Propagate SDL actions 
+      for (action, event_kind) in v_sdl_events {
         self.scene_stack.propagate_sdl2_to_subscribers(&mut self.action_bus, action, event_kind);
       }
 
@@ -272,6 +254,7 @@ impl<'a> HamGraph<'a> {
       self.renderer.canvas.clear();
       
       self.scene_stack.render_all(&mut self.renderer);
+      self.renderer.end_egui_pass_and_paint();
 
       // 5. UPDATE SCREEN
       self.renderer.canvas.present();

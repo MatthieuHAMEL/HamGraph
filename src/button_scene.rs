@@ -1,5 +1,5 @@
 // Temporary placed here. To be part of HamUI. 
-use crate::{action::{Action, EventKind}, action_bus::ActionBus, hg::Renderer, layout_manager::Layout, scene::{Scene, SceneID}, text_scene::TextScene, utils::is_point_in_rect};
+use crate::{action::{Action, EventKind}, action_bus::ActionBus, Renderer, layout_manager::Layout, scene::{Scene, SceneID}, text_scene::TextScene, utils::is_point_in_rect};
 use sdl2::{event::Event, mouse::MouseButton, pixels::Color, rect::Rect};
 use tracing::debug;
 
