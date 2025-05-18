@@ -180,6 +180,9 @@ impl<'a> HamGraph<'a> {
       // 1. HANDLE EVENTS
       for event in event_pump.poll_iter() {
         let event_kind;
+        // Propagate to egui 
+        self.renderer.egui_platform.handle_event(&event, &self.renderer.sdl_context, &self.renderer.sdl_video);
+
         match event {
           Event::Quit {..} |
           Event::KeyDown { keycode: Some(Keycode::Escape), .. } => { break 'hamloop }, // LEGACY TODO 
@@ -196,19 +199,9 @@ impl<'a> HamGraph<'a> {
           }
           _ => { continue; /* Nothing for now */ }
         }
-        // Propagate to egui 
-        self.renderer.egui_platform.handle_event(&event, &self.renderer.sdl_context, &self.renderer.sdl_video);
 
         // Here we really want to propagate the event e.g. MouseButtonDown
         let action = Action::SdlEvent(event);
-        v_sdl_events.push((action, event_kind));
-      }
-
-      // Begin "User Callback Zone"
-      self.renderer.begin_egui_pass();
-
-      // Propagate SDL actions 
-      for (action, event_kind) in v_sdl_events {
         self.scene_stack.propagate_sdl2_to_subscribers(&mut self.action_bus, action, event_kind);
       }
 
@@ -253,6 +246,7 @@ impl<'a> HamGraph<'a> {
       self.renderer.canvas.set_draw_color(Color::RGB(0, 0, 0));
       self.renderer.canvas.clear();
       
+      self.renderer.begin_egui_pass(); // To begin immediate frame
       self.scene_stack.render_all(&mut self.renderer);
       self.renderer.end_egui_pass_and_paint();
 

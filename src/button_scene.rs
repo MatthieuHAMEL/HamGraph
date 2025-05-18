@@ -72,7 +72,7 @@ impl Scene for ButtonScene {
     self.pos = Some(rect);
   }
 
-  fn susbcriptions(&self) -> EventKind {
+  fn subscriptions(&self) -> EventKind {
     EventKind::SdlMouseClick
   }
 }

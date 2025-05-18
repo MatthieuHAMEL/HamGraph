@@ -20,12 +20,13 @@ pub trait Scene {
 
   // todo call update and render "at the same time"
   fn update(&mut self, _delta_time: f32, _action_bus: &mut ActionBus) {}
+  fn immediate(&mut self, _renderer: &mut Renderer) {}
   fn render(&self, _renderer: &mut Renderer) {}
   fn is_modal(&self) -> bool { false }
   fn handle_action(&mut self, _action: &Action, _origin: Option<SceneID>, _action_bus: &mut ActionBus) -> bool { false }
   fn left_click_zone(&self) -> Option<Rect> { None }
   fn pos_changed(&mut self, _pos: Rect) {  }
-  fn susbcriptions(&self) -> EventKind { EventKind::NotAnEvent }
+  fn subscriptions(&self) -> EventKind { EventKind::NotAnEvent }
   fn name(&self) -> &str { "Unknown" }
 }
 
@@ -160,10 +161,11 @@ impl SceneStack
   }
 
   // Paint the scenes from the lowest to the highest in the stack
-  pub fn render_all(&self, renderer: &mut Renderer) {
-    for layer in &self.scenes_priv {
-      for scene_priv in layer.iter() {
+  pub fn render_all(&mut self, renderer: &mut Renderer) {
+    for layer in &mut self.scenes_priv {
+      for scene_priv in layer.iter_mut() {
         scene_priv.scene.render(renderer);
+        scene_priv.scene.immediate(renderer);
       }
     }
   }
@@ -182,7 +184,7 @@ impl SceneStack
         let scene_priv = &mut layer[sc_idx];
 
         // No need to do anything if the scene didn't subscribe to that action.
-        if !scene_priv.scene.susbcriptions().intersects(event_kind.clone()) {
+        if !scene_priv.scene.subscriptions().intersects(event_kind.clone()) {
           continue;
         }
         // Filter unwanted clicks if out of the clickable zone.
