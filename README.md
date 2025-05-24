@@ -9,7 +9,7 @@ Philosophy :
 I use : 
 - SDL2 for the windowing system + the SDL2 renderer
 - Taffy to express and compute the CSS flexbox display
-- EGUI for an immediate mode UI experience,
+- egui for an immediate mode UI experience,
 - Serde to offer a JSON config file describing sprite sheets and serialize it.
 
 See also the HamGraph_Macros repo ...

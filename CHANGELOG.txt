@@ -74,14 +74,22 @@ SceneStack is a collection of layers, every layer being a collection of scenes.
 - Simplified ActionKind -> EventKind
 - Simplified Scene trait, no Result to render, abstracted renderer object
 
------ v0.12 (??/04/25) -----
+----- v0.12 (30/04/25) -----
 - TTF layout based on the taffy tree, automatic 
-reloading of the TTF texture if layout changes (TODO)
+reloading of the TTF texture if layout changes
 - Added more traces and a logging guide
+- TTF layout is NOT GOOD for now and would need to be rethought
+
+----- v0.13 (24/04/25) -----
+- egui integration
+  - Possibility to render egui UIs in scenes.
+  - Layout is integrated with the other scenes with Taffy 
+
 
 ------------------------------------------------------
 
 Quick TODOLIST for next days :
+- Handle every screen with a scale factor and a DPI factor (see notes)
 - Provide samples
 - Continue unit testing 
 - Improve some logger messages to give a better context
