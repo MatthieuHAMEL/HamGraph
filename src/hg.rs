@@ -175,8 +175,6 @@ impl<'a> HamGraph<'a> {
     let mut last_update = Instant::now(); 
 
     'hamloop: loop {
-      let mut v_sdl_events : Vec<(Action, EventKind)> = Vec::new();
-      
       // 1. HANDLE EVENTS
       for event in event_pump.poll_iter() {
         let event_kind;

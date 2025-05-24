@@ -25,6 +25,8 @@ pub trait Scene {
   fn is_modal(&self) -> bool { false }
   fn handle_action(&mut self, _action: &Action, _origin: Option<SceneID>, _action_bus: &mut ActionBus) -> bool { false }
   fn left_click_zone(&self) -> Option<Rect> { None }
+
+  // TODO. a rectangle position is not enough. The scene may want to know its "border" size for example
   fn pos_changed(&mut self, _pos: Rect) {  }
   fn subscriptions(&self) -> EventKind { EventKind::NotAnEvent }
   fn name(&self) -> &str { "Unknown" }

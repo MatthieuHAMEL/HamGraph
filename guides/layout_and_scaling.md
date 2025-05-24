@@ -37,6 +37,29 @@ I can mimic that with Taffy with the properties : min-size, size, max-size using
 
 The pixels would be CSS pixels, then multiplied internally by the UI scale. And I could write something to allow specifying millimeters. 
 
+## The problem of integrating egui (or any other framework) in a CSS layout tree (Taffy)
+
+### Why do I integrate an immediate mode UI framework in HAMGRAPH ?
+
+This is how to create a simple "MenuScene" in a retained fashion in HamGraph currently: 
+- Create MenuScene
+  - Create two children : TopBarScene and BottomBarScene
+    - TopBarScene creates 2 children of ButtonScene type
+    - BottomBarScene creates 3 children : a CheckBoxScene, a TextBoxScene and a ButtonScene. 
+
+That's 8 scenes => the Scene trait has to be implemented 8 times. Not really light !
+
+Though, the layouting of this menu is perfectly handled by HamGraph Taffy Tree, whether it is "from outside" (where the Menu should be in the screen relatively to other widgets), or "from inside" (how are the different little buttons and checkboxes displayed inside the Menu). Because each of those 8 scenes is a Node in the taffy tree and each scene can request a Layout (Action::RequestLayout), that is, a bunch of CSS properties (flex-direction, align-items, min_size, size, max_size, etc.).
+
+Immediate mode (Egui's) goal is to replace all of this 8-scenes taffy branch by a 10 lines code, basically. 
+
+### Why it's tough 
+
+Though, I want Egui frames (Areas, Windows, etc.) to behave like scenes. First, if I create a menu with Egui, I still want the menu to be correctly positioned relatively to my other widgets in the Taffy tree. Consequently **the EguiScene has to be part of the Taffy tree**.
+
+By definition, the "inside", immediatly-rendered stuff (buttons, etc) in my EguiScene are not part of the Taffy tree and obey to egui's rules. (I looked at egui_taffy but it doesn't allow to merge my tree with their...). It follows that the EguiScene only acts like a **leaf** in the Taffy tree. 
+
+But, even though it happens in its own world, the Egui frame still acts like a container (a node!). Taffy will treat it like a leaf and communicate its size, but the Egui frame may want to grow and shrink, and it also has to communicate a "preffered size" to Taffy. This means I have to implement the "**negociation**" process that happens in CSS implementation. 
 
 ## Sources / useful threads and articles
 
