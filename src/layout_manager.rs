@@ -1,7 +1,7 @@
 use std::env;
 
 use sdl2::rect::Rect;
-use taffy::{prelude::{length, percent, TaffyMaxContent}, print_tree, Dimension, FlexDirection, FlexWrap, NodeId, Size, Style, TaffyTree};
+use taffy::{prelude::{length, percent, TaffyMaxContent}, print_tree, FlexDirection, FlexWrap, NodeId, Style, TaffyTree};
 use tracing::debug;
 
 use crate::scene::{SceneID, SceneStack};
@@ -32,6 +32,8 @@ pub type JustifyContent = taffy::JustifyContent;
 pub type AlignItems = taffy::AlignItems;
 pub type AlignContent = taffy::AlignContent;
 pub type AlignSelf = taffy::AlignSelf;
+pub type Dimension = taffy::prelude::Dimension;
+pub type Size = taffy::geometry::Size<Dimension>;
 
 
 #[derive(Clone)]
@@ -42,17 +44,19 @@ pub type AlignSelf = taffy::AlignSelf;
 /// in the layout struct, still ...so TODO 
 /// TODO play with Padding too
 pub struct Layout {
-  // Universal option
-  pub size: (Option<f32>, Option<f32>), // In percentage of the parent container 
+  // Universal attributes
+  pub size: Size,
+  pub min_size: Size, 
+  pub max_size: Size,
 
-  // Parent (container) options
+  // Parent (container) attributes
   pub flex: BoxFlags, 
   pub justify_content: JustifyContent, 
   pub align_items: AlignItems,
   pub align_content: Option<AlignContent>,
   pub gap: (f32, f32), // Idem 
 
-  // Child (item) options
+  // Child (item) attributes
   pub grow: f32, 
   pub align_self: Option<AlignSelf>
 }
@@ -60,7 +64,9 @@ pub struct Layout {
 impl Default for Layout {
   fn default() -> Layout {
     Layout {
-      size: (None, None), // means auto  
+      size: Size { width: Dimension::Auto, height: Dimension::Auto }, // means auto 
+      min_size: Size { width: Dimension::Auto, height: Dimension::Auto },
+      max_size: Size { width: Dimension::Auto, height: Dimension::Auto },
       flex: BoxFlags::DefaultBox, 
       justify_content:JustifyContent::FlexStart, 
       align_items: AlignItems::Stretch,  // So that if no size is specified on some element, things are still visible 
@@ -76,19 +82,9 @@ pub fn taffy_style(opts: &Layout) -> Style {
   // Start with the default taffy style ... 
   let mut taffy_style = taffy::Style { ..Default::default() };
 
-  if let Some(x) = opts.size.0 {
-    taffy_style.size.width = Dimension::Percent(x);
-  }
-  else {
-    taffy_style.size.width = Dimension::Auto;
-  }
-
-  if let Some(y) = opts.size.1 {
-    taffy_style.size.height = Dimension::Percent(y);
-  }
-  else {
-    taffy_style.size.height = Dimension::Auto;
-  }
+  taffy_style.size = opts.size;
+  taffy_style.min_size = opts.min_size;
+  taffy_style.max_size = opts.max_size;
 
   if opts.flex != BoxFlags::DefaultBox {
     taffy_style.flex_direction = if opts.flex.contains(BoxFlags::ItemsInRow) {
@@ -104,7 +100,8 @@ pub fn taffy_style(opts: &Layout) -> Style {
       } else {
         FlexDirection::Column
       }
-    } else { taffy_style.flex_direction};
+    } 
+    else { taffy_style.flex_direction };
 
     // Wrap vs. Nowrap vs. WrapReverse
     taffy_style.flex_wrap = if opts.flex.contains(BoxFlags::WrapItemsReversed) {
@@ -127,7 +124,7 @@ pub fn taffy_style(opts: &Layout) -> Style {
   taffy_style.align_content = opts.align_content;
 
   // 5. Gap in percent
-  taffy_style.gap = Size {width: percent(opts.gap.0), height: percent(opts.gap.1)};
+  taffy_style.gap = taffy::Size {width: percent(opts.gap.0), height: percent(opts.gap.1)};
 
   // 6. Child properties: grow, align_self
   taffy_style.flex_grow = opts.grow;
@@ -159,7 +156,7 @@ impl LayoutManager {
 
   pub fn update_layout(&mut self) -> bool {
     if self.taffy_tree.dirty(self.root_node_id).unwrap() {
-      self.taffy_tree.compute_layout(self.root_node_id, Size::MAX_CONTENT).unwrap();
+      self.taffy_tree.compute_layout(self.root_node_id, taffy::Size::MAX_CONTENT).unwrap();
       debug!(target: "hg::layout", "Taffy tree updated");
 
       if *LOG_PRINTTREE {
