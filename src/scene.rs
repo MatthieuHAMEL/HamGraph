@@ -22,7 +22,7 @@ pub trait Scene {
   fn update(&mut self, _delta_time: f32, _action_bus: &mut ActionBus) {}
 
   // TODO : this is private ! CF egui_scene.
-  fn immediate(&mut self, _renderer: &mut Renderer, _action_bus: &mut ActionBus) {}
+  fn immediate(&mut self, _renderer: &mut Renderer, _action_bus: &mut ActionBus) -> Option<Rect> { None }
   fn render(&self, _renderer: &mut Renderer) {}
   fn is_modal(&self) -> bool { false }
   fn handle_action(&mut self, _action: &Action, _origin: Option<SceneID>, _action_bus: &mut ActionBus) -> bool { false }

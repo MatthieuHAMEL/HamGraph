@@ -12,8 +12,8 @@ winapi = { version = "0.3", features = ["winuser"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
 tracing-appender = "0.2"
-egui_sdl2_platform = "0.3.0"
-egui = "=0.27.2"
+egui_sdl2_platform = { path = "../../rust/ws/egui_sdl2_platform" }
+egui = "0.31"
 egui_sdl2_canvas = { path = "../../rust/egui_sdl2_canvas" }
 
 [dependencies.sdl2]

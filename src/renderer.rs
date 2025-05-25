@@ -44,7 +44,7 @@ impl<'a> Renderer<'a> {
 
   pub fn begin_egui_pass(&mut self) {
    self.egui_ctx = Some(self.egui_platform.context()); 
-   if self.first_pass {// temp
+   if self.first_pass {// temp (TODO)
     temp_change_font_size(&self.egui_ctx.as_ref().unwrap());
     self.first_pass = false;
    } 
