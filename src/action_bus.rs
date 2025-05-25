@@ -59,16 +59,20 @@ impl ActionBus {
   pub fn push(&mut self, action: Action) -> Option<HamID> {
     debug!(target: "hg::bus", "Action pushed in bus.");
     let mut ret: Option<HamID> = None;
-    if let Action::CreateScene { .. } = action { // TODO abstract here with "Action is a CreationAction"
-      debug!(target="hg::bus", "User asked for new scene - provided id=<{}>", self.future_scene_id);
-      ret = Some(HamID::SceneID(self.future_scene_id));
-      self.future_scene_id += 1;
-    }
-    else if let Action::CreateText { .. } = action { // Prioritary action. maybe we should just tell render to ignore invalid sprite IDs once (todo)
-      ret = Some(HamID::SpriteID(self.next_sprite_id.get() + self.sprite_id_offset));
-      self.prioritary.push(ActionPriv::new(self.cur_processed_scene, ret.clone(), action));
-      self.sprite_id_offset += 1;
-      return ret; // Special case! 
+
+    match action {
+      Action::Scene {..} | Action::ImmediateUI {..} => {
+        debug!(target="hg::bus", "User asked for new scene - provided id=<{}>", self.future_scene_id);
+        ret = Some(HamID::SceneID(self.future_scene_id));
+        self.future_scene_id += 1;
+      },
+      Action::CreateText { .. } => {
+        ret = Some(HamID::SpriteID(self.next_sprite_id.get() + self.sprite_id_offset));
+        self.prioritary.push(ActionPriv::new(self.cur_processed_scene, ret.clone(), action));
+        self.sprite_id_offset += 1;
+        return ret; // Special case! 
+      },
+      _ => {}
     }
 
     self.actions_priv.push(ActionPriv::new(self.cur_processed_scene, ret.clone(), action));

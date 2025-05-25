@@ -32,6 +32,7 @@ pub trait Scene {
   fn pos_changed(&mut self, _pos: Rect) {  }
   fn subscriptions(&self) -> EventKind { EventKind::NotAnEvent }
   fn name(&self) -> &str { "Unknown" }
+  fn is_immediate(&self) -> bool { false } // private 
 }
 
 pub(crate) struct ScenePriv {
@@ -170,8 +171,11 @@ impl SceneStack
     for layer in &mut self.scenes_priv {
       for scene_priv in layer.iter_mut() {
         scene_priv.scene.render(renderer);
-        let real_rect = Some(scene_priv.scene.immediate(renderer, action_bus));
-        println!("Found real rect for UI {:?}", real_rect)
+
+        if scene_priv.scene.is_immediate() {
+          let real_rect = Some(scene_priv.scene.immediate(renderer, action_bus));
+          println!("Found real rect for UI {:?}", real_rect);
+        }
       }
     }
 

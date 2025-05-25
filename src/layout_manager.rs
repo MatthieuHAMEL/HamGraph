@@ -2,12 +2,14 @@ use std::env;
 
 use sdl2::rect::Rect;
 use taffy::{prelude::{length, percent, TaffyMaxContent}, print_tree, FlexDirection, FlexWrap, NodeId, Style, TaffyTree};
-use tracing::debug;
+use tracing::{debug, info};
 
 use crate::scene::{SceneID, SceneStack};
 
 use std::sync::LazyLock;
 static LOG_PRINTTREE: LazyLock<bool> = LazyLock::new(|| env::var("HAMGRAPH_PRINTTREE").is_ok());
+
+const TRALAY: &str = "hg::layout";
 
 // This module is an abstraction over the taffy layout.
 
@@ -43,6 +45,7 @@ pub type Size = taffy::geometry::Size<Dimension>;
 /// // NB: it has no interest in practice but it'd be useful to centralize that option 
 /// in the layout struct, still ...so TODO 
 /// TODO play with Padding too
+/// // todo layout_delta with optionals only (for PatchLayout)
 pub struct Layout {
   // Universal attributes
   pub size: Size,
@@ -157,7 +160,7 @@ impl LayoutManager {
   pub fn update_layout(&mut self) -> bool {
     if self.taffy_tree.dirty(self.root_node_id).unwrap() {
       self.taffy_tree.compute_layout(self.root_node_id, taffy::Size::MAX_CONTENT).unwrap();
-      debug!(target: "hg::layout", "Taffy tree updated");
+      debug!(target: TRALAY, "Taffy tree updated");
 
       if *LOG_PRINTTREE {
         print_tree(&self.taffy_tree, self.root_node_id); // taffy does not have a print tree to a file .. 
@@ -185,11 +188,13 @@ impl LayoutManager {
   }
 
   pub fn set_layout(&mut self, requesting: SceneID, scene_stack: &mut SceneStack, lay: Layout) {
+    info!(target: TRALAY, "set_layout requested by {}", requesting);
     // Convert the HAMGRAPH layout to a TAFFY layout : 
     let style = taffy_style(&lay); 
 
     // Maybe there is already a layout : 
     if let Some(nodeid_requesting) = scene_stack.nodeid(requesting) {
+      info!(target: TRALAY, "scene has already a layout, nodeID {:?}", nodeid_requesting);
       let _ = self.taffy_tree.set_style(nodeid_requesting, style);
       return;
     }

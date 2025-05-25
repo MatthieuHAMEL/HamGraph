@@ -1,0 +1,12 @@
+[package]
+name = "responsiveness"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+hamgraph = { path = "../../" }
+sdl2 = "0.37.0"
+egui = "0.31"
+bitflags = "2"
+dirs = "5.0"
+const_format = "0.0"

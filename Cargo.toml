@@ -3,6 +3,9 @@ name = "hamgraph"
 version = "0.13.0"
 edition = "2024"
 
+#[workspace]
+#members = ["examples/*"]
+
 [dependencies]
 serde_json = "1.0"
 dirs = "5.0"

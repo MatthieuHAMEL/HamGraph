@@ -28,7 +28,9 @@ pub struct Renderer<'a> {
 }
 
 impl<'a> Renderer<'a> {
-  pub fn new(sdl_context: &'a Sdl, sdl_video: &'a mut VideoSubsystem, canvas: &'a mut Canvas<Window>, sprite_store: SpriteStore<'a>, font_store: FontStore<'a>, 
+  pub fn new(sdl_context: &'a Sdl, sdl_video: &'a mut VideoSubsystem, 
+    canvas: &'a mut Canvas<Window>, sprite_store: SpriteStore<'a>, 
+    font_store: FontStore<'a>, 
     texture_creator: &'a TextureCreator<WindowContext>) -> Self {
     let dim: (u32, u32) = canvas.window().size();
     Self {

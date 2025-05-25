@@ -1,5 +1,6 @@
 use sdl2::event::Event;
 
+use crate::egui_scene::EguiWidget;
 use crate::layout_manager::Layout;
 use crate::scene::Scene;
 use crate::scene::SceneID;
@@ -36,10 +37,16 @@ pub enum Action {
   // The engine itself interprets these, e.g., to push or pop scenes, start music, etc.
   // For an SDL event : propagate the events to the scenes below.
 
-  CreateScene {
+  Scene {
     scene: Box<dyn Scene>,
     layer: usize
   },
+  ImmediateUI {
+    widget : Box<dyn EguiWidget>,
+    layout: Layout, // min / preferred / max, grow/shrink
+    layer: usize
+  },
+
   CreateText { // Create a TTf texture from a text 
     font: String, 
     size: String, // e.g. "small" "medium" "big" or directly a number like "35"

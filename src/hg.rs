@@ -3,7 +3,7 @@ use std::time::{Duration, Instant};
 use sdl2::{event::{Event, WindowEvent}, image::Sdl2ImageContext, keyboard::Keycode, mixer::Sdl2MixerContext, mouse::MouseButton, pixels::Color, render::{Canvas, TextureCreator}, ttf::Sdl2TtfContext, video::{Window, WindowContext}, Sdl, VideoSubsystem};
 use tracing::{debug, info, warn};
 //use taffy::print_tree;
-use crate::{action::{Action, EventKind}, action_bus::{ActionBus, ActionPriv}, font::FontStore, infraglobals, init, layout_manager::LayoutManager, mixer_manager::MixerManager, scene::{Scene, SceneID, SceneStack}, sprite::SpriteStore, Renderer};
+use crate::{action::{Action, EventKind}, action_bus::{ActionBus, ActionPriv}, egui_scene::EguiScene, font::FontStore, infraglobals, init, layout_manager::LayoutManager, mixer_manager::MixerManager, scene::{Scene, SceneID, SceneStack}, sprite::SpriteStore, Renderer};
 
 pub use crate::infraglobals::set_install_path;
 pub use crate::infraglobals::set_userdata_path;
@@ -102,7 +102,7 @@ impl<'a> HamGraph<'a> {
   fn handle_user_action(&mut self, action_p: ActionPriv) { // TODO err mgt 
     match action_p.action {
       // Some actions are intended to be handled by HAMGRAPH :
-      Action::CreateScene { scene, layer, .. } => {
+      Action::Scene { scene, layer, .. } => {
         if let Some(HamID::SceneID(scid)) = action_p.back_id {
           self.register_scene(layer, scene, scid, action_p.source_scene );
         }
@@ -110,6 +110,13 @@ impl<'a> HamGraph<'a> {
                                  // error mgt for unwrap ..
         // If not "detached mode" -- TODO :
       },    
+      Action::ImmediateUI { widget, layout, layer } => {
+        if let Some(HamID::SceneID(scid)) = action_p.back_id {
+          let egsc = Box::new(EguiScene::new(layout, widget));
+          self.register_scene(layer, egsc, scid, action_p.source_scene );
+        }
+        else { panic!("Contract error [83]"); } 
+      }
       Action::CreateText { font, size, text } => {
         self.layout_manager.update_layout(); 
         let (_id_layout, nodeid_layout) = self.scene_stack.get_first_with_layout(action_p.source_scene);

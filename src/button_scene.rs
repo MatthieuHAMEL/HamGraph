@@ -21,7 +21,7 @@ impl Scene for ButtonScene {
   fn name(&self) -> &str { &self.lil_name }
   fn init(&mut self, bus: &mut ActionBus) {
     bus.push(Action::RequestLayout(self.layout.clone()));
-    bus.push(Action::CreateScene { scene: Box::new(TextScene::new(self.lil_name.clone(), "big".to_owned())), layer: 4 /*URGENT TODO  */ });
+    bus.push(Action::Scene { scene: Box::new(TextScene::new(self.lil_name.clone(), "big".to_owned())), layer: 4 /*URGENT TODO  */ });
   }
 
   fn render(&self, renderer: &mut Renderer) {
