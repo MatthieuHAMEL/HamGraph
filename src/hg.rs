@@ -61,6 +61,7 @@ impl<'a> HamGraph<'a> {
     info!(target: TRAINIT, "Initializing HAMGRAPH...");
     
     let mut action_bus = ActionBus::new(sprite_store.shared_len());
+    action_bus.prepare(1, 2); // Consider scene 1 (user root) with next scene ID 2
     root_scene.init(&mut action_bus);
 
     let wdim = hamsdl2.canvas.window().size();

@@ -2,6 +2,8 @@ use std::{cell::Cell, rc::Rc};
 use tracing::debug;
 use crate::{action::Action, hg::HamID, scene::SceneID};
 
+const TRABUS: &str = "hg::bus";
+
 pub(crate) struct ActionPriv {
   pub(crate) source_scene: SceneID,
   // To be used by the engine : 
@@ -75,6 +77,7 @@ impl ActionBus {
       _ => {}
     }
 
+    debug!(target: TRABUS, "Pushed action from scene {}", self.cur_processed_scene);
     self.actions_priv.push(ActionPriv::new(self.cur_processed_scene, ret.clone(), action));
     ret  
   }
