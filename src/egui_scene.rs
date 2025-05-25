@@ -11,7 +11,6 @@ pub struct EguiScene<W: EguiWidget + 'static> {
   baseline_layout: Layout,
   /// runtime floor (only min_size.* changes)
   delta:    taffy::Style,
- // node:     taffy::Node,
   rect:     Rect,
   egui_rect: egui::Rect,
   ctx:      egui::Context,
@@ -31,24 +30,22 @@ impl<W: EguiWidget> Scene for EguiScene<W> {
     );
   }
 
+  // TODO "negociating mode / phase ? don't render anything in this case"
   fn immediate(&mut self, _renderer: &mut Renderer, bus: &mut ActionBus) -> Option<Rect> {
+
+    // TODO. Negociate before! if negociation has not ended, don't display !
     let resp = egui::Area::new(egui::Id::new("egui_leaf"))
-     // .fixed_pos(self.rect.min())
+      .fixed_pos(self.egui_rect.min)
       .default_size(self.egui_rect.size()) // TODO I need egui 0.31 
       .show(&self.ctx, |ui| {
-          self.widget.ui(&self.ctx, ui, bus); // USER CODE
+        self.widget.ui(&self.ctx, ui, bus); // USER CODE!! TODO how to let the user choose between Area Window etc?
       });
 
     // I return the used rectangle for the flexbox negociation
     let egui_rect = resp.response.rect;
     let width = (egui_rect.max.x - egui_rect.min.x).max(0.0) as u32;
     let height = (egui_rect.max.y - egui_rect.min.y).max(0.0) as u32;
-    Some(Rect::new(
-      egui_rect.min.x as i32,
-      egui_rect.min.y as i32,
-      width,
-      height,
-    ))
+    Some(Rect::new(egui_rect.min.x as i32, egui_rect.min.y as i32, width, height))
   }
 
 }

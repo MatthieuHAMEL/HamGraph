@@ -166,12 +166,15 @@ impl SceneStack
 
   // Paint the scenes from the lowest to the highest in the stack
   pub fn render_all(&mut self, renderer: &mut Renderer, action_bus: &mut ActionBus) {
+    
     for layer in &mut self.scenes_priv {
       for scene_priv in layer.iter_mut() {
         scene_priv.scene.render(renderer);
-        scene_priv.scene.immediate(renderer, action_bus);
+        let real_rect = Some(scene_priv.scene.immediate(renderer, action_bus));
+        println!("Found real rect for UI {:?}", real_rect)
       }
     }
+
   }
 
   // We are already doing a match {} on sdl events in the main loop. So we directly give the event kind here

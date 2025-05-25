@@ -63,7 +63,7 @@ impl<'a> Renderer<'a> {
 
   pub fn end_egui_pass_and_paint(&mut self) {
     let output = self.egui_platform.end_frame(&mut self.sdl_video).unwrap();
-    let v_primitives = self.egui_platform.tessellate(&output);
+    let v_primitives = self.egui_platform.tessellate(output.shapes);
 
     // Convert textures_delta (image data) to SDL2 textures, and draw
     if let Err(err) = self.egui_painter.paint_and_update_textures(
