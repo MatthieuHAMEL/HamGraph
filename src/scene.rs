@@ -20,7 +20,9 @@ pub trait Scene {
 
   // todo call update and render "at the same time"
   fn update(&mut self, _delta_time: f32, _action_bus: &mut ActionBus) {}
-  fn immediate(&mut self, _renderer: &mut Renderer) {}
+
+  // TODO : this is private ! CF egui_scene.
+  fn immediate(&mut self, _renderer: &mut Renderer, _action_bus: &mut ActionBus) {}
   fn render(&self, _renderer: &mut Renderer) {}
   fn is_modal(&self) -> bool { false }
   fn handle_action(&mut self, _action: &Action, _origin: Option<SceneID>, _action_bus: &mut ActionBus) -> bool { false }
@@ -163,11 +165,11 @@ impl SceneStack
   }
 
   // Paint the scenes from the lowest to the highest in the stack
-  pub fn render_all(&mut self, renderer: &mut Renderer) {
+  pub fn render_all(&mut self, renderer: &mut Renderer, action_bus: &mut ActionBus) {
     for layer in &mut self.scenes_priv {
       for scene_priv in layer.iter_mut() {
         scene_priv.scene.render(renderer);
-        scene_priv.scene.immediate(renderer);
+        scene_priv.scene.immediate(renderer, action_bus);
       }
     }
   }

@@ -245,7 +245,7 @@ impl<'a> HamGraph<'a> {
       self.renderer.canvas.clear();
       
       self.renderer.begin_egui_pass(); // To begin immediate frame
-      self.scene_stack.render_all(&mut self.renderer);
+      self.scene_stack.render_all(&mut self.renderer, &mut self.action_bus);
       self.renderer.end_egui_pass_and_paint();
 
       // 5. UPDATE SCREEN
