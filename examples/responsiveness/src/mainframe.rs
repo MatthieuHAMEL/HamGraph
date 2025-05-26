@@ -1,5 +1,5 @@
-use hamgraph::{action::{Action, EventKind}, action_bus::ActionBus, layout_manager::Layout, scene::{Scene, SceneID}, Renderer};
-use sdl2::{event::Event, mouse::MouseButton, pixels::Color, rect::Rect};
+use hamgraph::{action::{Action, EventKind}, action_bus::ActionBus, button_scene::ButtonScene, layout_manager::{Dimension, Layout, Size}, scene::{Scene, SceneID}, Renderer};
+use sdl2::{event::Event, mouse::MouseButton, pixels::Color, rect::{Point, Rect}};
 
 pub trait RectangleBeh {
   fn color(&self) -> Color;
@@ -52,6 +52,13 @@ impl Scene for RectangleScene
   // Why does this scene has ID 0 ? BUG IN HAMGRAPH
   fn init(&mut self, bus: &mut ActionBus) {
     bus.push(Action::RequestLayout(Layout { ..Default::default() }));
+    bus.push(Action::Scene { 
+      scene: Box::new(ButtonScene::new(
+        "bouton", Color::RGB(55,88,99), 
+        Layout { size: Size { width: Dimension::Length(100.), height: Dimension::Length(200.) },  ..Default::default() }
+      )),
+      layer: 5
+    });
   }
 
   fn render(&self, renderer: &mut Renderer) {
