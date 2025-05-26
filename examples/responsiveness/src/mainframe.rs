@@ -52,13 +52,16 @@ impl Scene for RectangleScene
   // Why does this scene has ID 0 ? BUG IN HAMGRAPH
   fn init(&mut self, bus: &mut ActionBus) {
     bus.push(Action::RequestLayout(Layout { ..Default::default() }));
-    bus.push(Action::Scene { 
-      scene: Box::new(ButtonScene::new(
-        "bouton", Color::RGB(55,88,99), 
-        Layout { size: Size { width: Dimension::Length(100.), height: Dimension::Length(200.) },  ..Default::default() }
-      )),
-      layer: 5
-    });
+
+    for _ in 1..=10 {
+      bus.push(Action::Scene { 
+        scene: Box::new(ButtonScene::new(
+          "bou", Color::RGB(55,88,99), 
+          Layout { size: Size { width: Dimension::Length(100.), height: Dimension::Length(200.) },  grow: 0.0, ..Default::default() }
+        )),
+        layer: 5
+      });
+    }
   }
 
   fn render(&self, renderer: &mut Renderer) {

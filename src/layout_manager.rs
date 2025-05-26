@@ -74,7 +74,7 @@ impl Default for Layout {
       justify_content:JustifyContent::FlexStart, 
       align_items: AlignItems::Stretch,  // So that if no size is specified on some element, things are still visible 
       align_content: None, // TODO no test for now 
-      gap: (0.1, 0.1), 
+      gap: (0.1, 0.1), // maybe zero but with a margin?
       grow: 1.0, 
       align_self: None, // No self alignment by default 
     }
