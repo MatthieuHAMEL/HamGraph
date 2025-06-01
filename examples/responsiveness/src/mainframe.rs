@@ -10,9 +10,8 @@ impl EguiWidget for MyMenu {
 
     egui::Frame::new()
       .fill(egui::Color32::from_rgb(30, 30, 40))
-      .corner_radius(6.0)
-      .outer_margin(egui::Margin::same(8))
       .show(ui, |ui| {
+        ui.set_min_size(ui.available_size());
         ui.vertical_centered(|ui| {
           if ui.button("New game").clicked() {
             println!("hello from bouton");
