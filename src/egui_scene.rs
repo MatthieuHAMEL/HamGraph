@@ -52,10 +52,11 @@ impl Scene for EguiScene {
   fn immediate(&mut self, _renderer: &mut Renderer, bus: &mut ActionBus) -> Option<Rect> {
     if self.rect.is_none() {
       println!("Not displaying anything, we havent received layout");
+      return None;
     }
 
     // TODO. Negociate before! if negociation has not ended, don't display !
-    let resp = egui::Area::new(egui::Id::new("egui_leaf"))
+    let resp = egui::Area::new(egui::Id::new("egui_leaf")) // TODO wtf ?? I dont care about this ID!
       .fixed_pos(self.egui_rect.unwrap().min)
       .default_size(self.egui_rect.unwrap().size()) // TODO I need egui 0.31 
       .show(_renderer.egui_ctx(), |ui| {

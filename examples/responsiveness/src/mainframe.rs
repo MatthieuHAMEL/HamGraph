@@ -1,5 +1,27 @@
-use hamgraph::{action::{Action, EventKind}, action_bus::ActionBus, button_scene::ButtonScene, layout_manager::{Dimension, Layout, Size}, scene::{Scene, SceneID}, Renderer};
+use hamgraph::{action::{Action, EventKind}, action_bus::ActionBus, button_scene::ButtonScene, egui_scene::EguiWidget, layout_manager::{Dimension, Layout, Size}, scene::{Scene, SceneID}, Renderer};
 use sdl2::{event::Event, mouse::MouseButton, pixels::Color, rect::{Point, Rect}};
+
+struct MyMenu {
+  music_on: bool,
+}
+
+impl EguiWidget for MyMenu {
+  fn ui(&mut self, _ctx:&egui::Context, ui:&mut egui::Ui, _bus: &mut ActionBus) {
+
+    egui::Frame::new()
+      .fill(egui::Color32::from_rgb(30, 30, 40))
+      .corner_radius(6.0)
+      .outer_margin(egui::Margin::same(8))
+      .show(ui, |ui| {
+        ui.vertical_centered(|ui| {
+          if ui.button("New game").clicked() {
+            println!("hello from bouton");
+          }
+          ui.checkbox(&mut self.music_on, "Music");
+        });
+      });
+  }
+}
 
 pub trait RectangleBeh {
   fn color(&self) -> Color;
@@ -53,7 +75,24 @@ impl Scene for RectangleScene
   fn init(&mut self, bus: &mut ActionBus) {
     bus.push(Action::RequestLayout(Layout { ..Default::default() }));
 
-    for _ in 1..=10 {
+    for _ in 1..=5 {
+      bus.push(Action::Scene { 
+        scene: Box::new(ButtonScene::new(
+          "bou", Color::RGB(55,88,99), 
+          Layout { size: Size { width: Dimension::Length(100.), height: Dimension::Length(200.) },  grow: 0.0, ..Default::default() }
+        )),
+        layer: 5
+      });
+    }
+
+    // Push a EGUI scene at the middle 
+    bus.push(Action::ImmediateUI { 
+      widget: Box::new(MyMenu{music_on: false}), 
+      layout: Layout { size: Size { width: Dimension::Length(100.), height: Dimension::Length(200.) },  grow: 0.0, ..Default::default()},
+      layer: 5 
+    });
+
+    for _ in 1..5 {
       bus.push(Action::Scene { 
         scene: Box::new(ButtonScene::new(
           "bou", Color::RGB(55,88,99), 
