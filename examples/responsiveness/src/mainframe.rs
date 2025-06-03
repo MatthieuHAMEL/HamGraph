@@ -70,7 +70,6 @@ impl RectangleBeh for RectangleScene {
 
 impl Scene for RectangleScene 
 {
-  // Why does this scene has ID 0 ? BUG IN HAMGRAPH
   fn init(&mut self, bus: &mut ActionBus) {
     bus.push(Action::RequestLayout(Layout { ..Default::default() }));
 

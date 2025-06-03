@@ -27,3 +27,7 @@ features = ["image", "mixer", "ttf"]
 [dependencies.serde]
 version = "1.0.210"
 features = ["derive"]
+
+[profile.dev]
+debug = true
+opt-level = 0

@@ -11,7 +11,7 @@ pub struct TextScene {
 
 impl TextScene {
   pub fn new(text: String, size: String) -> Self {
-    Self {text, idx_text: 0, pos: Rect::new(0, 0, 100, 100), size}
+    Self {text, idx_text: 0, pos: Rect::new(25, 25, 100, 100), size}
   }
 }
 
